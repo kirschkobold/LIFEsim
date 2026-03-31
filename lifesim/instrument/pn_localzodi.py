@@ -136,5 +136,9 @@ class PhotonNoiseLocalzodi(PhotonNoiseStarModule):
         # calculate the leakage contribution to the measurement
         lz_leak = (ap * self.data.inst['t_map']).sum(axis=(-2, -1)) / ap.sum() * lz_flux \
                   * self.data.inst['telescope_area']
+        
+        # temporary for jwst version!
+        # lz_leak = (ap * self.data.inst['t_map']).sum(axis=(-2, -1)) / ap.sum() * lz_flux \
+        #           * np.pi * (self.data.options.array['diameter'] / 2.) ** 2
 
         return lz_leak

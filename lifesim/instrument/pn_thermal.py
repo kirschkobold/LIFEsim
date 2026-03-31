@@ -71,9 +71,7 @@ class PhotonNoiseThermal(PhotonNoiseInstrumentModule):
         mirror_emissivity = self.data.options.array['m_emissivity']
         mirror_temp = self.data.options.array['m_temp']
         mirror_area = np.pi *(self.data.options.array['diameter'] / 2.) ** 2
-        beam_radius = self.data.options.array['beam_size']/2
-        distance = 2.5 * self.data.options.array['diameter']
-        solid_angle = (np.pi * beam_radius ** 2) / (distance ** 2)
+        solid_angle = (np.pi * self.data.inst['image_angle'] ** 2)
         
         # calculate noise from the mirror
         mirror_bb = black_body(mode='wavelength',
