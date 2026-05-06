@@ -19,4 +19,8 @@ from lifesim.optimize.ahgs import AhgsModule
 from lifesim.gui.spectrum_gui import Gui
 
 from lifesim.analysis.yield_wrapper import ScienceYield
+<<<<<<< HEAD
 from lifesim.analysis.yield_analysis import YieldAnalysis
+=======
+from lifesim.analysis.etc import etc
+>>>>>>> upstream/multiprocessing_v2
