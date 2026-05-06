@@ -169,6 +169,17 @@ def run(config_path: str):
             scenario_csv = merge_folder / "config_files" / "optimizer_scenarios.csv")
     (merge_folder / "config_files" / "launch_optimizer.py").write_text(content)
 
+    csv_path = merge_folder / "config_files" / "catalog_merge.csv"
+    lines = csv_path.read_text(encoding="us-ascii").splitlines()
+    basepath = merge_folder
+    endpath = "output/"
+    with open(merge_folder / "config_files" / "optimizer_jobs.csv", "w") as f:
+        for line in lines:
+            if not line.strip():
+                continue
+            merged_catalog_names = line.split(",")[2]
+            f.write(f"{merged_catalog_names},{basepath}/{merged_catalog_names}/{endpath}\n")
+
     template_masterlaunch = BashTemplate(read_template("master_launch_template.slurm.sh"))
     content = template_masterlaunch.substitute(
             job_name     = f"{today}_optimizer",
