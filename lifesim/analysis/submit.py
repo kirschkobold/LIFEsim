@@ -52,7 +52,7 @@ def run(config_path: str, steps: list[int] | None = None):
     # run dates
     today               = cfg.today
     catalog_source_date = cfg.catalog_source_date
-    queue = cfg.queue
+    queue               = cfg.queue
 
     # sweep options
     option_name         = cfg.option_name
