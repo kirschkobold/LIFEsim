@@ -13,6 +13,11 @@ import lifesim
 from lifesim.util.habitable import single_habitable_zone
 
 class YieldAnalysis:
+    def __init__(self,
+                 catalog_folder_path,
+                 config_path):
+        self.catalog_folder_path = catalog_folder_path
+        self.config_path = config_path
  
     def interpolate_one(self, 
                         source_path):
@@ -65,14 +70,13 @@ class YieldAnalysis:
         max_time_table.to_csv(os.path.join(source_path, source_path.split('/')[-1] + '_diameter_mission_time.csv'))
         mission_time.to_csv(os.path.join(source_path, source_path.split('/')[-1] + '_diameter_mission_time_RAW.csv'))
 
-    def run_interpolation(self, 
-                          path):
+    def run_interpolation(self):
         # run the interpolation on all opt_ directories in the given path
         # path = "/home/kirschkobold/documents/life_internship/LIFEsim_yields/euler_data"
 
         # find all subdirectories (and subsub, and so on) in path that start with 'opt_'
         opt_dirs = []
-        for root, dirs, files in os.walk(path):
+        for root, dirs, files in os.walk(self.catalog_folder_path):
             for dirname in dirs:
                 if dirname.startswith('opt_'):
                     opt_dirs.append(os.path.join(root, dirname))
@@ -81,12 +85,11 @@ class YieldAnalysis:
             self.interpolate_one(opt_dir)
 
     def get_eff_eta(self, 
-                    catalog_path,
-                    config_path="/home/kirschkobold/documents/life_internship/LIFEsim_yields/optimizer_config.yaml"):
+                    catalog_path):
         bus = lifesim.Bus()
 
         # setting the options
-        bus.build_from_config(filename=config_path)
+        bus.build_from_config(filename=self.config_path)
         bus.data.import_catalog(input_path=catalog_path)
 
         (bus.data.catalog.s_in,
@@ -165,33 +168,33 @@ class YieldAnalysis:
 
         etas.to_csv(csv_path)
 
-    def run_eta_one(self, path, catalog_name):
-        base = Path(path)
+    def run_eta_one(self, catalog_name):
+        base = Path(self.catalog_folder_path)
         exclude = {"config_files", "logs"}
         catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
 
-        csv_path = os.path.join(path, f"eta_summary_{catalog_name}.csv")
+        csv_path = os.path.join(self.catalog_folder_path, f"eta_summary_{catalog_name}.csv")
         catalog_path = f"output/ap_merged/{catalog_name}/sweep_{catalog_name}_catalog.hdf5"
         
         self.get_all_etas(catalogs=catalogs,
                           csv_path=csv_path,
-                          catalog_base_path=path,
+                          catalog_base_path=self.catalog_folder_path,
                           catalog_name=catalog_path)
     
-    def run_etasummaries(self, path):
-        base = Path(path)
+    def run_etasummaries(self):
+        base = Path(self.catalog_folder_path)
         exclude = {"config_files", "logs"}
         catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
 
-        options_path = Path(path) / catalogs[0] / "output/ap_merged"
+        options_path = Path(self.catalog_folder_path) / catalogs[0] / "output/ap_merged"
         options = sorted(p.name for p in options_path.iterdir() if p.is_dir())
 
         for option in options:
             print(f"Processing option {option}...")
-            csv_path = Path(path) / f"eta_summary_{option}.csv"
+            csv_path = Path(self.catalog_folder_path) / f"eta_summary_{option}.csv"
             catalog_path = f"output/ap_merged/{option}/sweep_{option}_catalog.hdf5"
 
             self.get_all_etas(catalogs=catalogs,
                               csv_path=csv_path,
-                              catalog_base_path=path,
+                              catalog_base_path=self.catalog_folder_path,
                               catalog_name=catalog_path)
