@@ -17,6 +17,7 @@ COMMANDS:
 - lifesim-yieldanalysis catalog_merge: creates catalog_merge csv template
 - lifesim-yieldanalysis optimizer_scenarios: creates optimizer_scenarios csv template
 - lifesim-yieldanalysis yield_config.py: runs the yield calculation
+- lifesim-yieldanalysis yield_config.py --steps 1 2 3: only run some steps (1=snr,2=merge,3=optimisation)
 
 WHAT THE AUTOMATION DOES:
 - creates all necessary files to go through the entire yields process
