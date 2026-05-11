@@ -35,23 +35,42 @@ class Options(object):
             - ``'primary_emissivity'`` : Emissivity of the mirror (dimensionless).
             - ``'d_temp'`` : Temperature of the detector environment in [K].
             - ``'pixel_size'`` : Size of the pixels in [m]. (length of one side of the square pixel)
-            - ``'beam_size'`` : Diameter of the beam in [m].
+            - ``'dc_per_pix'`` : Dark current per pixel in [e-/px/s].
+            - ``'detector_wl_min'`` : Minimum wavelength of the detector sensitivity in [m].
+            - ``'detector_wl_max'`` : Maximum wavelength of the detector sensitivity in [m].
+            - ``'pix_per_wl'`` : Nyquist rate / Number of pixels per wavelength, i.e. how many pixels are used to sample one wavelength in the detector.
+            - ``'num_apertures'`` : Number of apertures (collecetor spacecraft).
+            - ``'num_outputs'`` : Number of outputs.
+            - ``'fixed_baseline'`` : If true, the baseline will be fixed to the value given in ``'baseline'``. If false, the baseline will be optimized.
     other : dict
         Options concerning simulation parameters. They are
             - ``'image_size'`` : Number of pixels (in one axis) which will be simulated.
             - ``'wl_optimal'`` : The wavelength to which the baseline is optimized in [micron].
             - ``'n_plugins'`` : Number of sockets the instrument class will feature.
+            - ``'output_path'`` : Path to which the config file will be saved.
+            - ``'output_filename'`` : Filename under which the config file will be saved.
+            - ``'fov_threshold'`` : Threshold for the field of view used if the FoV taper model is set to gaussian.
+            - ``'n_cpu'`` : Number of CPUs to use for parallel processing.
     models : dict
         Options concerning different models used in the simulation. They are
             - ``'localzodi'`` : Model for the localzodi, possible options are ``'glasse'`` and
               ``'darwinsim'``
             - ``'habitable'`` : Model used for calculating the habitable zone, possible options are
               ``'MS'`` and ``'POST_MS'``
+            - ``'fov_taper'`` : Model used for the field of view taper, possible options are ``'gaussian'`` and ``'none'``
     optimization : dict
         Options concerning the methods used to optimally distribute the observing time.
             - ``'N_pf'`` : Number of sampling locations per orbit.
             - ``'snr_target'`` : Planets with a larger signal-to-noise ratio than `'snr_target'`
               are counted as detections.
+            - ``'experiments'`` : List of experiments to be conducted.
+            - ``'t_search'`` : Duration of the search phase in [s].
+            - ``'characterization'`` : If true, the optimization will be performed for characterization as well.
+            - ``'snr_char'`` : SNR threshold for characterization.
+            - ``'opt_limit'`` : possible options are 'time' and 'experiments'
+            - ``'opt_limit_factor'`` : 
+            - ``'n_orbits'`` : 
+            - ``'iwa_cut'`` :
             - ``'limit'`` : Limits the number of wanted detections for the different stellar host
               star types.
             - ``'habitable'`` : If true, the integration time is optimized towards planets residing
