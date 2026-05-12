@@ -7,6 +7,7 @@ import json
 from typing import Union
 import logging
 import yaml
+import re
 
 import numpy as np
 from joblib import Parallel, delayed, parallel_config
@@ -558,8 +559,8 @@ class ScienceYield:
         t_all = time.time()
 
         subdirs = [d for d in os.listdir(source_path) if os.path.isdir(os.path.join(source_path, d))]
-        diams_float = [float('.'.join(d.split('_')[1:])) for d in subdirs]
-        diams = ['_'.join(d.split('_')[1:]) for d in subdirs]
+        diams_float = [extract_float_from_name(d) for d in subdirs]
+        diams = [str(value).replace('.', '_') for value in diams_float]
 
         # -- 1. CREATE TYPETABLE --
         timetable = {}
@@ -1367,3 +1368,19 @@ def merge_runs(mapping_csv: str,
             fh.write('\n'.join(info_lines))
 
         print(f"Finished processing merge row {idx}. Info written to: {note_path}")
+
+def extract_float_from_name(name: str) -> float:
+    parts = name.split('_')
+    numeric_parts = []
+
+    # walk from right to left
+    for part in reversed(parts):
+        if re.fullmatch(r'\d+', part):   # only digits
+            numeric_parts.append(part)
+        else:
+            break
+
+    # we collected from right to left, so reverse back
+    numeric_parts.reverse()
+    num_str = '.'.join(numeric_parts)
+    return float(num_str)
