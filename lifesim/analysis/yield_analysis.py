@@ -15,10 +15,19 @@ from lifesim.util.habitable import single_habitable_zone
 class YieldAnalysis:
     def __init__(self,
                  catalog_folder_path,
-                 config_path):
+                 config_path,
+                 option_name,
+                 option_unit,
+                 save_path=None):
         self.catalog_folder_path = catalog_folder_path
         self.config_path = config_path
- 
+        self.option_name = option_name
+        self.option_unit = option_unit
+        self.save_path = Path(save_path) if save_path else None
+        if self.save_path:
+            self.save_path.mkdir(parents=True, exist_ok=True)
+
+
     def interpolate_one(self, 
                         source_path):
         subdirs = [d for d in os.listdir(source_path) if os.path.isdir(os.path.join(source_path, d))]
@@ -198,3 +207,80 @@ class YieldAnalysis:
                               csv_path=csv_path,
                               catalog_base_path=self.catalog_folder_path,
                               catalog_name=catalog_path)
+    
+    def plot_single_opt(self, 
+                        path,
+                        text_vertical=False,
+                        legend=True):
+        fig, ax = plt.subplots(dpi=300, figsize=(5,5))
+
+        name = [x for x in path.split('/') if x != ''][-1]
+        mission_time = pd.read_csv(os.path.join(path, name + '_diameter_mission_time_RAW.csv'), index_col=0)
+        max_time_table = pd.read_csv(os.path.join(path, name + '_diameter_mission_time.csv'), index_col=0)
+
+        times_select = [5, 10]
+
+        ax.plot(mission_time.index, mission_time['mission_time_opt_factor'] / 365.25 / 24 / 60 / 60, label='Opt. Factor Mission Time', linestyle='--', c='tab:orange', marker='x')
+        ax.plot(mission_time.index, mission_time['mission_time_mean'] / 365.25 / 24 / 60 / 60, label='Mean Mission Time', c='k', marker='x')
+        ax.fill_between(list(mission_time.index),
+                        list((mission_time['mission_time_mean'] - mission_time['lu_mission_time']) / 365.25 / 24 / 60 / 60),
+                        list((mission_time['mission_time_mean'] + mission_time['uu_mission_time']) / 365.25 / 24 / 60 / 60),
+                        color='gray', alpha=0.5, label='68% Confidence Interval')
+        ax.set_xlabel(f'{self.option_name} ({self.option_unit})')
+        ax.set_ylabel('Mission Time (years)')
+
+        catalog_name = path.split('/')[-3]
+        ax.set_title(f'{catalog_name}\n{name}')
+
+        if legend:
+            ax.legend()
+
+        # ax.xscale('log')
+        ax.set_yscale('log')
+
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+
+        for t in times_select:
+            ax.hlines(y=t, xmin=xlim[0], xmax=max_time_table['diameter_mean'].loc[t],  color='k', linestyle=':')
+            if text_vertical:
+                ax.text(x=1.0*max_time_table['diameter_mean'].loc[t], y=1.2*t, s=f'{t} years', verticalalignment='center', horizontalalignment='left', rotation=90, rotation_mode='anchor')
+            else:
+                ax.text(x=1.07*max_time_table['diameter_mean'].loc[t], y=t, s=f'{t} years', verticalalignment='center', horizontalalignment='left')
+            ax.vlines(x=max_time_table['diameter_mean'].loc[t], ymin=0, ymax=t, color='k', linestyle=':')
+            ax.errorbar(x=max_time_table['diameter_mean'].loc[t],
+                        y=t,
+                        xerr=[[max_time_table['lu_diameter'].loc[t]], [max_time_table['uu_diameter'].loc[t]]],
+                        fmt='s',
+                        color='k',
+                        label=f'{self.option_name} at {t} years' if t == times_select[0] else None)
+
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+
+        if self.save_path:
+            subfolder = self.save_path / "single_opt_plots"
+            subfolder.mkdir(parents=True, exist_ok=True)
+            plot_name = Path(path).parts[-3] + "_" + Path(path).name + ".png"
+            plt.savefig(subfolder / plot_name, bbox_inches="tight", dpi=300)
+            plt.close()
+        else:
+            plt.show()
+
+    def plot_all_single_opts(self):
+        base = Path(self.catalog_folder_path)
+        exclude = {"config_files", "logs"}
+        catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
+
+        experiments_path = Path(self.catalog_folder_path) / catalogs[0] / "output"
+        exclude = {"ap_merged"}
+        experiments = sorted(p.name for p in experiments_path.iterdir() if p.is_dir() and p.name not in exclude)
+
+        for catalog in catalogs:
+            print(f"Processing catalog {catalog}...")
+            for experiment in experiments:
+                experiment_path = Path(self.catalog_folder_path) / catalog / "output" / experiment
+                print(f"Processing {experiment}...")
+                self.plot_single_opt(path=str(experiment_path))
+
+
