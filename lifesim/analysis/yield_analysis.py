@@ -27,7 +27,6 @@ class YieldAnalysis:
         if self.save_path:
             self.save_path.mkdir(parents=True, exist_ok=True)
 
-
     def interpolate_one(self, 
                         source_path):
         subdirs = [d for d in os.listdir(source_path) if os.path.isdir(os.path.join(source_path, d))]
@@ -177,36 +176,19 @@ class YieldAnalysis:
 
         etas.to_csv(csv_path)
 
-    def run_eta_one(self, catalog_name):
+    def run_eta_summary(self):
         base = Path(self.catalog_folder_path)
         exclude = {"config_files", "logs"}
         catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
 
-        csv_path = os.path.join(self.catalog_folder_path, f"eta_summary_{catalog_name}.csv")
-        catalog_path = f"output/ap_merged/{catalog_name}/sweep_{catalog_name}_catalog.hdf5"
+        csv_path = os.path.join(self.catalog_folder_path, f"eta_summary.csv")
+        options = sorted(p.name for p in (Path(self.catalog_folder_path) / catalogs[0] / "output/ap_merged").iterdir() if p.is_dir())
+        catalog_path = f"output/ap_merged/{options[0]}/sweep_{options[0]}_catalog.hdf5"
         
         self.get_all_etas(catalogs=catalogs,
                           csv_path=csv_path,
                           catalog_base_path=self.catalog_folder_path,
                           catalog_name=catalog_path)
-    
-    def run_etasummaries(self):
-        base = Path(self.catalog_folder_path)
-        exclude = {"config_files", "logs"}
-        catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
-
-        options_path = Path(self.catalog_folder_path) / catalogs[0] / "output/ap_merged"
-        options = sorted(p.name for p in options_path.iterdir() if p.is_dir())
-
-        for option in options:
-            print(f"Processing option {option}...")
-            csv_path = Path(self.catalog_folder_path) / f"eta_summary_{option}.csv"
-            catalog_path = f"output/ap_merged/{option}/sweep_{option}_catalog.hdf5"
-
-            self.get_all_etas(catalogs=catalogs,
-                              csv_path=csv_path,
-                              catalog_base_path=self.catalog_folder_path,
-                              catalog_name=catalog_path)
     
     def plot_single_opt(self, 
                         path,
@@ -283,4 +265,185 @@ class YieldAnalysis:
                 print(f"Processing {experiment}...")
                 self.plot_single_opt(path=str(experiment_path))
 
+    def _get_catalog(self,
+                     source_path):
+        subdirs = [d for d in os.listdir(source_path) if os.path.isdir(os.path.join(source_path, d)) if d.startswith('opt_')]
+        opt_names = [d.removeprefix('opt_') for d in subdirs]
 
+        diam_time_tables = {}
+        for subdir, opt_name in zip(subdirs, opt_names):
+            data_path = os.path.join(source_path, subdir)
+            diam_time_tables[opt_name] = pd.read_csv(os.path.join(data_path, subdir + '_diameter_mission_time.csv'), index_col=0)
+            diam_time_tables[opt_name][diam_time_tables[opt_name] < 0] = np.nan  # set negative values to nan
+
+        # sort opt_name by mean diameter at 10 years
+        diam_time_tables = dict(sorted(diam_time_tables.items(), key=lambda item: item[1].loc[10, 'diameter_mean']))
+
+        return diam_time_tables
+
+    def one_catalog_all_opt_plot(self, 
+                                 cat_name):
+        source_path = Path(self.catalog_folder_path) / cat_name / 'output'
+        catalog_time_tables = self._get_catalog(source_path)
+
+        configs = {'e1_e2_f05_char': dict(label='Exp. 1 & 2; Char.', color='tab:orange', ls='-',   z=5),
+                   'e1_e2_f09_char': dict(label='Exp. 1 & 2; Char.', color='tab:orange', ls='-',   z=5),
+                   'e1_e2_f05':      dict(label='Exp. 1 & 2; Full',  color='gray',       ls='--',  z=4),
+                   'e1_e2_f09':      dict(label='Exp. 1 & 2; Full',  color='gray',       ls='--',  z=4),
+                   'e1_f05_char':    dict(label='Exp. 1; Char.',      color='gray',       ls='-.',  z=3),
+                   'e1_f09_char':    dict(label='Exp. 1; Char.',      color='gray',       ls='-.',  z=3)}
+
+        fig, ax = plt.subplots(dpi=200, ncols=2, figsize=(8, 4))
+
+        for opt, cfg in configs.items():
+            axis = ax[0] if 'f05' in opt else ax[1]
+            axis.plot(catalog_time_tables[opt].index, 
+                      catalog_time_tables[opt]['diameter_mean'], 
+                      label=cfg['label'], 
+                      color=cfg['color'], 
+                      linestyle=cfg['ls'], 
+                      zorder=cfg['z'])
+            axis.set_xlabel('Mission Time (years)')
+            axis.set_ylabel(f'{self.option_name} ({self.option_unit})')
+            axis.grid(True, which='both', linestyle='-', linewidth=0.5)
+            axis.set_title(f'{cat_name}\n- to {"50%" if "f05" in opt else "90%"}', fontsize=10)
+
+        ax[1].legend()
+
+        # yaxis of right plot to the right
+        ax[1].yaxis.set_label_position("right")
+        ax[1].yaxis.tick_right()
+
+        # adjust to common y-axis
+        ymin = min(ax[0].get_ylim()[0], ax[1].get_ylim()[0])
+        ymax = max(ax[0].get_ylim()[1], ax[1].get_ylim()[1])
+        ax[0].set_ylim(ymin, ymax)
+        ax[1].set_ylim(ymin, ymax)
+
+        if self.save_path:
+            subfolder = self.save_path / "one_cat_all_opt_plots"
+            subfolder.mkdir(parents=True, exist_ok=True)
+            plot_name = cat_name + ".png"  # Path(path).parts[-3] + "_" + Path(path).name + ".png"
+            plt.savefig(subfolder / plot_name, bbox_inches="tight", dpi=300)
+            plt.close()
+        else:
+            plt.show()
+
+    def plot_all_one_cat(self):
+        base = Path(self.catalog_folder_path)
+        exclude = {"config_files", "logs"}
+        catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
+
+        for catalog in catalogs: 
+            print(f"Processing catalog {catalog}...")
+            self.one_catalog_all_opt_plot(cat_name=catalog)
+
+    def separate_bryson_sag(self,
+                            opt,
+                            mtime):
+        val_bryson = []
+        val_sag = []
+
+        etas = pd.read_csv(Path(self.catalog_folder_path) / f"eta_summary.csv", index_col=0)
+
+        for catalog in etas.index:
+            source_path = Path(self.catalog_folder_path) / catalog / 'output'
+            catalog_time_tables = self._get_catalog(source_path)
+            if 'Bryson' in catalog:
+                val_bryson.append([etas.loc[catalog, 'etas_fgk'], catalog_time_tables[opt]['diameter_mean'].loc[mtime]])
+            elif 'SAG' in catalog:
+                val_sag.append([etas.loc[catalog, 'etas_fgk'], catalog_time_tables[opt]['diameter_mean'].loc[mtime]])
+        
+        val_bryson = np.array(val_bryson)
+        val_bryson = val_bryson[val_bryson[:, 0].argsort()]  # sort by eta
+        val_sag = np.array(val_sag)
+        val_sag = val_sag[val_sag[:, 0].argsort()]  # sort by eta
+
+        return val_bryson, val_sag
+    
+    def plot_final_one(self,
+                       opt):
+        fig, ax = plt.subplots(dpi=200, ncols=2, figsize=(8, 4), gridspec_kw={'width_ratios': [4, 3]})
+
+        val_bryson, val_sag = self.separate_bryson_sag(opt=opt, mtime=5)
+        ax[0].plot(val_sag[:, 0], val_sag[:, 1], marker='x', linestyle='-', label='SxD', color='tab:orange')
+        ax[0].plot(val_bryson[:, 0], val_bryson[:, 1], marker='x', linestyle='--', label='BxD', color='tab:orange')
+
+        opt2 = opt.replace('f09', 'f05')
+        val_bryson, val_sag = self.separate_bryson_sag(opt=opt2, mtime=5)
+        ax[0].plot(val_sag[:, 0], val_sag[:, 1], marker='x', linestyle='-', label='SxD', color='gray')
+        ax[0].plot(val_bryson[:, 0], val_bryson[:, 1], marker='x', linestyle='--', label='BxD', color='gray')
+
+        ax2 = ax[0].twiny()
+        ax2.set_xticks([])
+
+        etas = pd.read_csv(Path(self.catalog_folder_path) / f"eta_summary.csv", index_col=0)
+        etas['shortname'] = etas.index.str.split('_').str[1].str.replace(r'([A-Z])[^x]*', r'\1', regex=True) + '\n' + etas.index.str.split('_').str[2].str[:4]
+        marker_labels = etas['shortname'].to_list()
+        marker_positions = etas['etas_fgk'].to_list()
+        ax2.set_xticks(marker_positions)
+        ax2.set_xticklabels(marker_labels, rotation=45)
+        ax2.set_xlim(ax[0].get_xlim())
+
+        handles = [
+            plt.Line2D([0], [0], color='k', linestyle='-', label='SAG13 x Dressing'),
+            plt.Line2D([0], [0], color='k', linestyle='--', label='Bryson x Dressing'),
+            plt.Line2D([0], [0], marker='x', color='tab:orange', linestyle='', label='to 90%'),
+            plt.Line2D([0], [0], marker='x', color='gray', linestyle='', label='to 50%'),
+        ]
+        ax[0].legend(handles=handles, loc='upper right', title='in 5 years')
+
+        for i, col in zip([5, 10, 15], ['lightgrey', 'gray', 'tab:orange']):
+            val_bryson, val_sag = self.separate_bryson_sag(opt=opt, mtime=float(i))
+            ax[1].plot(val_sag[:, 0], val_sag[:, 1], marker='x', linestyle='-', label='SxD', color=col)
+            ax[1].plot(val_bryson[:, 0], val_bryson[:, 1], marker='x', linestyle='--', label='BxD', color=col)
+        
+        ax[1].yaxis.set_label_position("right")
+        ax[1].yaxis.tick_right()
+
+        handles = [
+            plt.Line2D([0], [0], marker='x', color='tab:orange', linestyle='', label='in 5 yrs'),
+            plt.Line2D([0], [0], marker='x', color='gray', linestyle='', label='in 10 yrs'),
+            plt.Line2D([0], [0], marker='x', color='lightgray', linestyle='', label='in 15 yrs'),
+        ]
+        ax[1].legend(handles=handles, loc='upper right')
+
+        for i in range(2):
+            ax[i].set_xlabel(r'$\eta_\mathrm{Earth, FGK}$; EEC Ratio')
+            ax[i].set_ylabel(f'Required {self.option_name} ({self.option_unit})')
+            ax[i].grid(True, which='both', linestyle='-', linewidth=0.5)
+
+        ymin = min(ax[0].get_ylim()[0], ax[1].get_ylim()[0])
+        ymax = max(ax[0].get_ylim()[1], ax[1].get_ylim()[1])
+        ax[0].set_ylim(ymin, ymax)
+        ax[1].set_ylim(ymin, ymax)
+
+        exp_str = 'Exp. ' + ' and '.join(p[1:] for p in opt.split('_') if p.startswith('e') and p[1:].isdigit())
+        char_str = 'char. opt.' if 'char' in opt.split('_') else 'not char. opt.'
+        fig.suptitle(f'{exp_str}, {char_str}', fontsize=12, x=0.9, y=0.8, ha='right', va='top')
+
+        fig.tight_layout()
+
+        if self.save_path:
+            subfolder = self.save_path / "final_plots"
+            subfolder.mkdir(parents=True, exist_ok=True)
+            plot_name = opt + ".png"  # Path(path).parts[-3] + "_" + Path(path).name + ".png"
+            plt.savefig(subfolder / plot_name, bbox_inches="tight", dpi=300)
+            plt.close()
+        else:
+            plt.show()
+
+    def plot_all_final(self):
+        base = Path(self.catalog_folder_path)
+        exclude = {"config_files", "logs"}
+        catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
+
+        experiments_path = Path(self.catalog_folder_path) / catalogs[0] / "output"
+        exclude = {"ap_merged"}
+        experiments = sorted(p.name for p in experiments_path.iterdir() if p.is_dir() and p.name not in exclude and 'f09' in p.name)
+        experiments_clean = [s.removeprefix('opt_') for s in experiments]
+
+        for experiment in experiments_clean:
+            print(f"Processing {experiment}...")
+            self.plot_final_one(opt=experiment)
+        
