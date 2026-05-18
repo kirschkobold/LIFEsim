@@ -631,7 +631,7 @@ class ScienceYield:
                          'total-1s', 'total+1s'], index=diams_float)
             exptable[exp].sort_index(inplace=True)
         for subdir in subdirs:
-            df = float('.'.join(subdir.split('_')[1:]))
+            df = extract_float_from_name(subdir)
             catalog_file = [f for f in os.listdir(os.path.join(source_path, subdir))
                         if f.endswith('.hdf5') and 'maxsep' not in f]
             if len(catalog_file) != 1:
