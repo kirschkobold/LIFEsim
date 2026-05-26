@@ -162,7 +162,7 @@ class Options(object):
         self.array['num_apertures'] = 4
         self.array['num_outputs'] = 2
 
-        self.other['image_size'] = 256  # TODO: or 512?
+        self.other['image_size'] = 64  # old: 256 TODO: or 512?
         self.other['wl_optimal'] = 15
         self.other['n_plugins'] = 5
         self.other['fov_threshold'] = 0.01
