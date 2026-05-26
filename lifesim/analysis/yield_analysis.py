@@ -11,6 +11,7 @@ from pathlib import Path
 
 import lifesim
 from lifesim.util.habitable import single_habitable_zone
+from lifesim.analysis.yield_wrapper import extract_float_from_name
 
 class YieldAnalysis:
     def __init__(self,
@@ -30,8 +31,8 @@ class YieldAnalysis:
     def interpolate_one(self, 
                         source_path):
         subdirs = [d for d in os.listdir(source_path) if os.path.isdir(os.path.join(source_path, d))]
-        diams_float = [float('.'.join(d.split('_')[1:])) for d in subdirs]
-        diams = ['_'.join(d.split('_')[1:]) for d in subdirs]
+        diams_float = [extract_float_from_name(d) for d in subdirs]
+        diams = [str(value).replace('.', '_') for value in diams_float]
 
         # uu = upper uncertainty, lu = lower uncertainty
         mission_time = pd.DataFrame(index=np.sort(diams_float), columns=['mission_time_mean', 'lu_mission_time', 'uu_mission_time', 'mission_time_opt_factor'])
@@ -365,6 +366,10 @@ class YieldAnalysis:
                        opt):
         fig, ax = plt.subplots(dpi=200, ncols=2, figsize=(8, 4), gridspec_kw={'width_ratios': [4, 3]})
 
+        exp_str = 'Exp. ' + ' and '.join(p[1:] for p in opt.split('_') if p.startswith('e') and p[1:].isdigit())
+        char_str = 'char. opt.' if 'char' in opt.split('_') else 'not char. opt.'
+        fig.suptitle(f'{exp_str}, {char_str}', fontsize=12, x=0.9, y=0.8, ha='right', va='top')
+
         val_bryson, val_sag = self.separate_bryson_sag(opt=opt, mtime=5)
         ax[0].plot(val_sag[:, 0], val_sag[:, 1], marker='x', linestyle='-', label='SxD', color='tab:orange')
         ax[0].plot(val_bryson[:, 0], val_bryson[:, 1], marker='x', linestyle='--', label='BxD', color='tab:orange')
@@ -391,7 +396,7 @@ class YieldAnalysis:
             plt.Line2D([0], [0], marker='x', color='tab:orange', linestyle='', label='to 90%'),
             plt.Line2D([0], [0], marker='x', color='gray', linestyle='', label='to 50%'),
         ]
-        ax[0].legend(handles=handles, loc='upper right', title='in 5 years')
+        ax[0].legend(handles=handles, loc='upper right', title=f'{exp_str}, {char_str}, in 5 years')
 
         for i, col in zip([5, 10, 15], ['lightgrey', 'gray', 'tab:orange']):
             val_bryson, val_sag = self.separate_bryson_sag(opt=opt, mtime=float(i))
