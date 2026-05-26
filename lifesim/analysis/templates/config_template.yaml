@@ -65,6 +65,8 @@ optimization:
   snr_char: 44.1  # bulk S/N at which planet is counted as characterized
   n_orbits: 5  # number of visits required before a planet can be characterized 
   t_search: 78840000.0  # total mission time in s, not used in ‘experiment’ mode
+  iwa_cut: none
+  characterization: false
 other:  # these are parameters to set-up the simulation 
   fov_threshold: 0.01  # set the angular extend to which the astrophysical sources are simulated 
   image_size: 64  # image_size**2 is the number of pixels used in simulation of the astrophysical sources 
