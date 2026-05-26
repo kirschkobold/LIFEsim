@@ -5,7 +5,7 @@ array:
   diameter: 2.0  # single collector mirror diameter in m 
   quantum_eff: 0.6  # quantum efficiency of the detector 
   ratio: 6.0  # ratio between the nulling and the imaging baseline 
-  spec_res: 100.0  # spectral resolution R 
+  spec_res: 20.0  # spectral resolution R 
   t_efficiency: 0.8  # duty cycle of the mission, i.e. here 80% of on-target time is spend integrating photons 
   t_slew: 36000.0  # slew time in s 
   throughput: 0.15  # total system throughput 
@@ -65,7 +65,7 @@ optimization:
   t_search: 78840000.0  # total mission time in s, not used in ‘experiment’ mode
 other:  # these are parameters to set-up the simulation 
   fov_threshold: 0.01  # set the angular extend to which the astrophysical sources are simulated 
-  image_size: 512  # image_size**2 is the number of pixels used in simulation of the astrophysical sources 
+  image_size: 64  # image_size**2 is the number of pixels used in simulation of the astrophysical sources 
   n_cpu: 4  # number of CPU-cores to be used, will be overwritten later
   n_plugins: 5  # maximum number of plugins a module can have 
   output_filename: none
