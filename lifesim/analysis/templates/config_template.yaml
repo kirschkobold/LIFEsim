@@ -22,6 +22,7 @@ array:
   detector_wl_min: 5.e-6
   detector_wl_max: 28.e-6
   pix_per_wl: 2.2
+  fixed_baseline: false
 models:
   fov_taper: gaussian  # type of FoV taper, I recommend Gaussian 
   habitable: MS  # type of habitable zone mode (MS = main sequence). Does not matter at this stage 
