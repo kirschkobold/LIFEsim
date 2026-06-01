@@ -249,10 +249,21 @@ class YieldAnalysis:
             else:
                 ax.text(x=1.07*max_time_table['diameter_mean'].loc[t], y=t, s=f'{t} years', verticalalignment='center', horizontalalignment='left')
             ax.vlines(x=max_time_table['diameter_mean'].loc[t], ymin=0, ymax=t, color='k', linestyle=':')
-            ax.errorbar(x=max_time_table['diameter_mean'].loc[t],
-                        y=t,
-                        xerr=[[max_time_table['lu_diameter'].loc[t]], [max_time_table['uu_diameter'].loc[t]]],
-                        fmt='s',
+            # check for negative error bars values
+            lu = max_time_table['lu_diameter'].loc[t]
+            uu = max_time_table['uu_diameter'].loc[t]
+            if lu >= 0 and uu >= 0:
+                ax.errorbar(x=max_time_table['diameter_mean'].loc[t],
+                            y=t,
+                            xerr=[[max_time_table['lu_diameter'].loc[t]], [max_time_table['uu_diameter'].loc[t]]],
+                            fmt='s',
+                            color='k',
+                            label=f'{self.option_name} at {t} years' if t == times_select[0] else None)
+            else:
+                print(f"Skipping xerr for t={t}: negative uncertainty values (lu={lu}, uu={uu})")
+                ax.plot(max_time_table['diameter_mean'].loc[t],
+                        t,
+                        's',
                         color='k',
                         label=f'{self.option_name} at {t} years' if t == times_select[0] else None)
 
