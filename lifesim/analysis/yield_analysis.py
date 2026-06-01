@@ -44,7 +44,7 @@ class YieldAnalysis:
             if len(csv_files) != 1:
                 raise ValueError(f'Expected one _mission_time.csv file in {data_path}, found {len(csv_files)}')
             data = pd.read_csv(os.path.join(data_path, csv_files[0]))
-            data_finite = data[data['total'] != np.inf] # remove any possible inf rows
+            data_finite = data[np.isfinite(data['total'])] # remove any possible inf rows
             mission_time.loc[d, 'mission_time_mean'] = data_finite['total'].mean()
             mission_time.loc[d, 'lu_mission_time'] = data_finite['total'].mean() - data_finite['total'].quantile(0.16)
             mission_time.loc[d, 'uu_mission_time'] = data_finite['total'].quantile(0.84) - data_finite['total'].mean()
@@ -267,8 +267,8 @@ class YieldAnalysis:
                         color='k',
                         label=f'{self.option_name} at {t} years' if t == times_select[0] else None)
 
-        ax.set_xlim(xlim)
-        ax.set_ylim(ylim)
+        # ax.set_xlim(xlim)
+        # ax.set_ylim(ylim)
 
         if self.save_path:
             subfolder = self.save_path / "single_opt_plots"
