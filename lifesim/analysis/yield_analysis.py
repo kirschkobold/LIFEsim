@@ -86,15 +86,15 @@ class YieldAnalysis:
         kind_opt = 'cubic' if len(mt_opt) >= 4 else 'quadratic' if len(mt_opt) >= 3 else 'linear'
 
         # make a spline interpolation of all data points in mission time data frame and evaluate at max_times
-        spline = interp1d(np.array(mt['mission_time_mean'] / 365.25 / 24 / 60 / 60, dtype=float), np.array(mission_time.index, dtype=float), kind=kind_mean, fill_value='extrapolate')
+        spline = interp1d(np.array(mt['mission_time_mean'] / 365.25 / 24 / 60 / 60, dtype=float), np.array(mt.index, dtype=float), kind=kind_mean, fill_value='extrapolate')
         max_time_table['diameter_mean'] = spline(max_times)
         # for uncertainties, do linear interpolation of upper and lower bounds
-        spline_lu = interp1d(np.array((mt['mission_time_mean'] - mt['lu_mission_time']) / 365.25 / 24 / 60 / 60, dtype=float), np.array(mission_time.index, dtype=float), kind='linear', fill_value='extrapolate')
-        spline_uu = interp1d(np.array((mt['mission_time_mean'] + mt['uu_mission_time']) / 365.25 / 24 / 60 / 60, dtype=float), np.array(mission_time.index, dtype=float), kind='linear', fill_value='extrapolate')
+        spline_lu = interp1d(np.array((mt['mission_time_mean'] - mt['lu_mission_time']) / 365.25 / 24 / 60 / 60, dtype=float), np.array(mt.index, dtype=float), kind='linear', fill_value='extrapolate')
+        spline_uu = interp1d(np.array((mt['mission_time_mean'] + mt['uu_mission_time']) / 365.25 / 24 / 60 / 60, dtype=float), np.array(mt.index, dtype=float), kind='linear', fill_value='extrapolate')
         max_time_table['lu_diameter'] = max_time_table['diameter_mean'] - spline_lu(max_times)
         max_time_table['uu_diameter'] = spline_uu(max_times) - max_time_table['diameter_mean']
         # for optimal factor diameters
-        spline_opt = interp1d(np.array(mt_opt['mission_time_opt_factor'] / 365.25 / 24 / 60 / 60, dtype=float), np.array(mission_time.index, dtype=float), kind=kind_opt, fill_value='extrapolate')
+        spline_opt = interp1d(np.array(mt_opt['mission_time_opt_factor'] / 365.25 / 24 / 60 / 60, dtype=float), np.array(mt_opt.index, dtype=float), kind=kind_opt, fill_value='extrapolate')
         max_time_table['diameter_opt_factor'] = spline_opt(max_times)
 
         # save max time table to csv
@@ -103,7 +103,6 @@ class YieldAnalysis:
 
     def run_interpolation(self):
         # run the interpolation on all opt_ directories in the given path
-        # path = "/home/kirschkobold/documents/life_internship/LIFEsim_yields/euler_data"
 
         # find all subdirectories (and subsub, and so on) in path that start with 'opt_'
         opt_dirs = []
