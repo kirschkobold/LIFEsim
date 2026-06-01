@@ -44,18 +44,19 @@ class YieldAnalysis:
             if len(csv_files) != 1:
                 raise ValueError(f'Expected one _mission_time.csv file in {data_path}, found {len(csv_files)}')
             data = pd.read_csv(os.path.join(data_path, csv_files[0]))
-            mission_time.loc[d, 'mission_time_mean'] = data['total'].mean()
-            mission_time.loc[d, 'lu_mission_time'] = data['total'].mean() - data['total'].quantile(0.16)
-            mission_time.loc[d, 'uu_mission_time'] = data['total'].quantile(0.84) - data['total'].mean()
-            det_ratio = data['detection'] / (data['total'])
+            data_finite = data[data['total'] != np.inf] # remove any possible inf rows
+            mission_time.loc[d, 'mission_time_mean'] = data_finite['total'].mean()
+            mission_time.loc[d, 'lu_mission_time'] = data_finite['total'].mean() - data_finite['total'].quantile(0.16)
+            mission_time.loc[d, 'uu_mission_time'] = data_finite['total'].quantile(0.84) - data_finite['total'].mean()
+            det_ratio = data_finite['detection'] / (data_finite['total'])
             mission_time.loc[d, 'detection_ratio_mean'] = det_ratio.mean()
             mission_time.loc[d, 'lu_detection_ratio'] = det_ratio.mean() - det_ratio.quantile(0.16)
             mission_time.loc[d, 'uu_detection_ratio'] = det_ratio.quantile(0.84) - det_ratio.mean()
 
             if 'n_Experiment_1' in data.columns:
-                mission_time.loc[d, 'mission_time_opt_factor'] = data.loc[data['n_Experiment_1'] == data['n_Experiment_1'].max(), 'total'].mean()
+                mission_time.loc[d, 'mission_time_opt_factor'] = data_finite.loc[data_finite['n_Experiment_1'] == data_finite['n_Experiment_1'].max(), 'total'].mean()
             else:
-                mission_time.loc[d, 'mission_time_opt_factor'] = data.loc[data['n_Experiment_2'] == data['n_Experiment_2'].max(), 'total'].mean()
+                mission_time.loc[d, 'mission_time_opt_factor'] = data_finite.loc[data_finite['n_Experiment_2'] == data_finite['n_Experiment_2'].max(), 'total'].mean()
 
         # add jitter for possible duplicate values
         def add_jitter_to_duplicates(series):
@@ -67,34 +68,30 @@ class YieldAnalysis:
                     vals[i] += seen[v] * 1e-6  # 1 microsecond jitter
                 else:
                     seen[v] = 0
+            n_duplicates = sum(v for v in seen.values())
+            if n_duplicates > 0:
+                print(f"Jitter applied to {n_duplicates} duplicate value(s) in '{series.name}'")
             return vals
 
         mission_time['mission_time_mean'] = add_jitter_to_duplicates(mission_time['mission_time_mean'])
         mission_time['mission_time_opt_factor'] = add_jitter_to_duplicates(mission_time['mission_time_opt_factor'])
 
-        # create a valid mask in case of inf values and create new dataframes of only valid values
-        valid_mean = mission_time['mission_time_mean'].replace([np.inf, -np.inf], np.nan).notna()
-        valid_opt  = mission_time['mission_time_opt_factor'].replace([np.inf, -np.inf], np.nan).notna()
-        mt      = mission_time.loc[valid_mean]
-        mt_opt  = mission_time.loc[valid_opt]
-
         max_times = np.arange(0.5, 20.1, 0.5)
 
         max_time_table = pd.DataFrame(index=np.sort(max_times), columns=['diameter_mean', 'lu_diameter', 'uu_diameter', 'diameter_opt_factor'])
 
-        kind_mean = 'cubic' if len(mt) >= 4 else 'quadratic' if len(mt) >= 3 else 'linear'
-        kind_opt = 'cubic' if len(mt_opt) >= 4 else 'quadratic' if len(mt_opt) >= 3 else 'linear'
-
+        n = len(mission_time)
+        kind = 'cubic' if n >= 4 else 'quadratic' if n >= 3 else 'linear'
         # make a spline interpolation of all data points in mission time data frame and evaluate at max_times
-        spline = interp1d(np.array(mt['mission_time_mean'] / 365.25 / 24 / 60 / 60, dtype=float), np.array(mt.index, dtype=float), kind=kind_mean, fill_value='extrapolate')
+        spline = interp1d(np.array(mission_time['mission_time_mean'] / 365.25 / 24 / 60 / 60, dtype=float), np.array(mission_time.index, dtype=float), kind=kind, fill_value='extrapolate')
         max_time_table['diameter_mean'] = spline(max_times)
         # for uncertainties, do linear interpolation of upper and lower bounds
-        spline_lu = interp1d(np.array((mt['mission_time_mean'] - mt['lu_mission_time']) / 365.25 / 24 / 60 / 60, dtype=float), np.array(mt.index, dtype=float), kind='linear', fill_value='extrapolate')
-        spline_uu = interp1d(np.array((mt['mission_time_mean'] + mt['uu_mission_time']) / 365.25 / 24 / 60 / 60, dtype=float), np.array(mt.index, dtype=float), kind='linear', fill_value='extrapolate')
+        spline_lu = interp1d(np.array((mission_time['mission_time_mean'] - mission_time['lu_mission_time']) / 365.25 / 24 / 60 / 60, dtype=float), np.array(mission_time.index, dtype=float), kind='linear', fill_value='extrapolate')
+        spline_uu = interp1d(np.array((mission_time['mission_time_mean'] + mission_time['uu_mission_time']) / 365.25 / 24 / 60 / 60, dtype=float), np.array(mission_time.index, dtype=float), kind='linear', fill_value='extrapolate')
         max_time_table['lu_diameter'] = max_time_table['diameter_mean'] - spline_lu(max_times)
         max_time_table['uu_diameter'] = spline_uu(max_times) - max_time_table['diameter_mean']
         # for optimal factor diameters
-        spline_opt = interp1d(np.array(mt_opt['mission_time_opt_factor'] / 365.25 / 24 / 60 / 60, dtype=float), np.array(mt_opt.index, dtype=float), kind=kind_opt, fill_value='extrapolate')
+        spline_opt = interp1d(np.array(mission_time['mission_time_opt_factor'] / 365.25 / 24 / 60 / 60, dtype=float), np.array(mission_time.index, dtype=float), kind=kind, fill_value='extrapolate')
         max_time_table['diameter_opt_factor'] = spline_opt(max_times)
 
         # save max time table to csv
