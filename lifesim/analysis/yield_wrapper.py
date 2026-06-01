@@ -964,7 +964,7 @@ class ScienceYield:
         except Exception:
             option_dirs = []
             options_created = []
-        msg = f"""run_aperture_sweep_snr summary:
+        msg = f"""run_sweep_snr summary:
                   run_name: {run_name}
                   requested_{option_name}: {option_values}
                   {option_name}_directories_found: {option_dirs}
@@ -998,8 +998,7 @@ class ScienceYield:
         if option_value is not None:
             bus.data.options.set_manual(**{option_name: option_value})
 
-        bus.data.options.set_manual(
-            output_path=output_path)
+        bus.data.options.set_manual(output_path=output_path)
         bus.data.options.set_manual(output_filename=output_filename)
 
 
