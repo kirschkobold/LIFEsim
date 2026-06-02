@@ -65,7 +65,7 @@ class YieldAnalysis:
             for i, v in enumerate(vals):
                 if v in seen:
                     seen[v] += 1
-                    vals[i] += seen[v] * 1e-6  # 1 microsecond jitter
+                    vals[i] += seen[v] * 1e-3  
                 else:
                     seen[v] = 0
             n_duplicates = sum(v for v in seen.values())
