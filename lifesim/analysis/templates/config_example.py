@@ -11,6 +11,8 @@ queue = "public"                   # alternatively es_quanz
 option_name =   "primary_temp"        # name of the option to sweep over
 option_values = "np.arange(44,50)"    # values to sweep over
 run_name =      "primarymirror_sweep" # name of the run, used for naming folders and files
+option_fullname = "Primary Mirror Temperature" # full name of the option, used for plot labels
+option_unit =   "K"                   # unit of the option, used for plot labels
 
 # optional LIFEsim and optimizer configuration (leave as none if not using default template)
 lifesim_config_path = None # eg. "/cluster/home/YOUR_USERNAME/LIFEsim/custom_config.yaml"

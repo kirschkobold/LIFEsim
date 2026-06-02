@@ -37,9 +37,9 @@ def submit(slurm_file, dependency_ids=None):
 
 def run(config_path: str, steps: list[int] | None = None):
     """Run the whole workflow with the given files. Pass the given steps, defaults to all.
-    steps: 1 = snr calculation, 2 = merging, 3 = optimisation"""
+    steps: 1 = snr calculation, 2 = merging, 3 = optimisation, 4 = analysis"""
     if steps is None:
-        steps = [1, 2, 3]
+        steps = [1, 2, 3, 4]
     ###################################
     # general configuration
     ###################################
@@ -63,6 +63,10 @@ def run(config_path: str, steps: list[int] | None = None):
     lifesim_config_path   = getattr(cfg, "lifesim_config_path", None)
     optimizer_scenarios_path   = getattr(cfg, "optimizer_scenarios_path", None)
     catalog_merge_path   = getattr(cfg, "catalog_merge_path", None)
+
+    # analysis
+    option_fullname = cfg.option_fullname
+    option_unit = cfg.option_unit
 
     # catalogs
     catalog_folders = [f for f in (yields / "catalogs" / catalog_source_date).iterdir() if f.is_dir()]
@@ -207,6 +211,39 @@ def run(config_path: str, steps: list[int] | None = None):
             dependency_ids=[merge_job_id] if 2 in steps else None)
         
         print(f"  Optimisation job submitted: {opt_job_id}")
+
+    ###################################
+    # optimisation 
+    ###################################
+    if 4 in steps:
+        print("\n=== step 4: analysis ===")
+
+        analysis_folder = yields / "runs" / f"{today}_analysis"
+        analysis_folder.mkdir(parents=True, exist_ok=True)
+
+        template_analysisscript = Template(read_template("analysis_run_template.py"))
+        content = template_analysisscript.substitute(
+            catalog_folder_path = merge_folder,
+            config_path         = merge_folder / "config_files" / "optimizer_config.yaml",
+            save_path           = analysis_folder,
+            option_name         = option_fullname,
+            option_unit         = option_unit)
+        (analysis_folder / "analysis_run.py").write_text(content)
+
+        template_runscript = Template(read_template("run_analysis_template.slurm.sh"))
+        content = template_runscript.substitute(
+            job_name    = f"{today}_analysis",
+            output_path = analysis_folder / "logs" / "%x_%j.log",
+            python_run  = analysis_folder / "analysis_run.py",
+            venv_path   = venv_path,
+            queue       = queue)
+        (analysis_folder / "run_analysis.slurm.sh").write_text(content)
+
+        analysis_job_id = submit(
+            analysis_folder / "run_analysis.slurm.sh",
+            dependency_ids=opt_job_id if 3 in steps else None)
+
+        print(f"  Analysis job submitted: {analysis_job_id}")
 
 
 command_templates = {
