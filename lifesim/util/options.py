@@ -97,6 +97,8 @@ class Options(object):
                       'primary_temp': 0.,
                       'primary_emissivity': 0.,
                       'd_temp': 0.,
+                      'spectro_temp': 0.,
+                      'instrument_temp': 0.,
                       'pixel_size': 0.,
                       'dc_per_pix': 0.,
                       'detector_wl_min': 0.,
@@ -154,6 +156,8 @@ class Options(object):
         self.array['primary_temp'] = 48
         self.array['primary_emissivity'] = 0.025
         self.array['d_temp'] = 23
+        self.array['spectro_temp'] = 25
+        self.array['instrument_temp'] = 40
         self.array['pixel_size'] = 23 * 1e-6
         self.array['dc_per_pix'] = 1
         self.array['detector_wl_min'] = 5e-6

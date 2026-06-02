@@ -72,6 +72,7 @@ class PhotonNoiseThermal(PhotonNoiseInstrumentModule):
             Temperature of the detector environment in [K].
         """
 
+        ### primary mirror
         # solid angle is governed by the fiber pick-up, which for single mode is lambda / D
         solid_angle = np.pi * (self.data.inst['hfov'])**2
         
@@ -86,6 +87,22 @@ class PhotonNoiseThermal(PhotonNoiseInstrumentModule):
                    * self.data.inst['telescope_area'] / self.data.options.array['num_apertures']
                    * mirror_bb)
 
+        ### instrument up until the fiber (beam combiner)
+        # handled similarly to the mirror but with emissivity 1        
+        # calculate noise from the instrument
+        instrument_bb = black_body(mode='wavelength',
+                                            bins=self.data.inst['wl_bins'],
+                                            width=self.data.inst['wl_bin_widths'],
+                                            temp=self.data.options.array['instrument_temp'])
+
+        ti_leak = (solid_angle
+                   * self.data.inst['telescope_area'] / self.data.options.array['num_apertures']
+                   * instrument_bb)
+
+        ### spectrograph
+        # same handlig as the detector
+        
+        ### detector
         # detector collects thermal noise photons across its whole sensitivity range (at least from the detector
         # housing). Define temporary wl bins. Delta_wl is chosen to be small enough to capture the shape of the black
         # body curve and does not need to be adjusted
@@ -113,4 +130,4 @@ class PhotonNoiseThermal(PhotonNoiseInstrumentModule):
 
         td_leak = solid_angle * total_area * detector_bb_int * np.ones_like(self.data.inst['wl_bins'])
 
-        return tm_leak, td_leak
+        return tm_leak, td_leak, ti_leak
