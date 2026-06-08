@@ -229,7 +229,7 @@ def run(config_path: str, steps: list[int] | None = None):
             catalog_folder_path = merge_folder,
             config_path         = merge_folder / "config_files" / "optimizer_config.yaml",
             save_path           = analysis_folder,
-            option_name         = option_fullname,
+            option_fullname     = option_fullname,
             option_unit         = option_unit)
         (analysis_folder / "analysis_run.py").write_text(content)
 
@@ -244,7 +244,7 @@ def run(config_path: str, steps: list[int] | None = None):
 
         analysis_job_id = submit(
             analysis_folder / "run_analysis.slurm.sh",
-            dependency_ids=opt_job_id if 3 in steps else None)
+            dependency_ids=[opt_job_id] if 3 in steps else None)
 
         print(f"  Analysis job submitted: {analysis_job_id}")
 

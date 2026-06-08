@@ -86,7 +86,7 @@ class PhotonNoiseThermal(PhotonNoiseInstrumentModule):
                    * self.data.options.array['primary_emissivity']
                    * self.data.inst['telescope_area'] / self.data.options.array['num_apertures']
                    * mirror_bb)
-
+        '''
         ### instrument up until the fiber (beam combiner)
         # handled similarly to the mirror but with emissivity 1        
         # calculate noise from the instrument
@@ -101,7 +101,7 @@ class PhotonNoiseThermal(PhotonNoiseInstrumentModule):
 
         ### spectrograph
         # same handlig as the detector
-        
+        '''
         ### detector
         # detector collects thermal noise photons across its whole sensitivity range (at least from the detector
         # housing). Define temporary wl bins. Delta_wl is chosen to be small enough to capture the shape of the black
@@ -130,4 +130,4 @@ class PhotonNoiseThermal(PhotonNoiseInstrumentModule):
 
         td_leak = solid_angle * total_area * detector_bb_int * np.ones_like(self.data.inst['wl_bins'])
 
-        return tm_leak, td_leak, ti_leak
+        return tm_leak, td_leak # , ti_leak
