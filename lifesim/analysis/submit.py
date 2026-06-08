@@ -11,6 +11,7 @@ from string import Template
 class BashTemplate(Template):
     delimiter = "@"
 
+# helpers
 def read_template(name: str) -> str:
     """Read a bundled template file from lifesim/analysis/templates/."""
     return (files("lifesim.analysis") / "templates" / name).read_text()
@@ -35,6 +36,7 @@ def submit(slurm_file, dependency_ids=None):
           + (f"  (depends on {dependency_ids})" if dependency_ids else ""))
     return job_id
 
+# main workflow
 def run(config_path: str, steps: list[int] | None = None):
     """Run the whole workflow with the given files. Pass the given steps, defaults to all.
     steps: 1 = snr calculation, 2 = merging, 3 = optimisation, 4 = analysis"""
@@ -71,6 +73,12 @@ def run(config_path: str, steps: list[int] | None = None):
     # catalogs
     catalog_folders = [f for f in (yields / "catalogs" / catalog_source_date).iterdir() if f.is_dir()]
     catalogs        = [(f.name, f.name.split("_", 3)[-1]) for f in catalog_folders]
+
+    # folders for outputs
+    merge_folder    = yields / "runs" / f"{today}_merge"
+    merge_folder.mkdir(parents=True, exist_ok=True)
+    analysis_folder = yields / "runs" / f"{today}_analysis"
+    analysis_folder.mkdir(parents=True, exist_ok=True)
 
     ###################################
     # snr calculation
@@ -124,8 +132,6 @@ def run(config_path: str, steps: list[int] | None = None):
     if 2 in steps:
         print("\n=== step 2: merging ===")
 
-        merge_folder    = yields / "runs" / f"{today}_merge"
-        merge_folder.mkdir(parents=True, exist_ok=True)
         (merge_folder / "logs").mkdir(exist_ok=True)
         (merge_folder / "config_files").mkdir(exist_ok=True)
 
@@ -218,9 +224,6 @@ def run(config_path: str, steps: list[int] | None = None):
     if 4 in steps:
         print("\n=== step 4: analysis ===")
 
-        analysis_folder = yields / "runs" / f"{today}_analysis"
-        analysis_folder.mkdir(parents=True, exist_ok=True)
-
         template_analysisscript = Template(read_template("analysis_run_template.py"))
         content = template_analysisscript.substitute(
             catalog_folder_path = merge_folder,
@@ -245,7 +248,7 @@ def run(config_path: str, steps: list[int] | None = None):
 
         print(f"  Analysis job submitted: {analysis_job_id}")
 
-
+# command line interface
 command_templates = {
     "init": ("config_example.py", "yield_config.py", "cluster paths and run settings.", None),
     "lifesim_config": ("config_template.yaml", "lifesim_config.yaml", "lifesim and experiment settings. Make sure to keep the file utf-8!", "utf-8"),
@@ -272,7 +275,7 @@ def cli():
         nargs="+",       # accepts one or more values
         type=int,
         default=None,
-        help="Steps to run, e.g. --steps 1 2 3. Defaults to all steps. 1=snr calculation, 2=merging, 3=optimisation."
+        help="Steps to run, e.g. --steps 1 2 3 4. Defaults to all steps. 1=snr calculation, 2=merging, 3=optimisation, 4=analysis."
     )
 
     args = parser.parse_args()
