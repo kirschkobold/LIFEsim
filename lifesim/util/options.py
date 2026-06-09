@@ -156,7 +156,7 @@ class Options(object):
         self.array['primary_temp'] = 48
         self.array['primary_emissivity'] = 0.025
         self.array['d_temp'] = 23
-        self.array['spectro_temp'] = 25
+        self.array['spectro_temp'] = 27
         self.array['instrument_temp'] = 40
         self.array['pixel_size'] = 23 * 1e-6
         self.array['dc_per_pix'] = 1

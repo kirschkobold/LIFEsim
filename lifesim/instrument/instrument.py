@@ -299,7 +299,8 @@ class Instrument(InstrumentModule):
             noise_thermal = noise_list_thermal
         
         noise_inst = (noise_thermal[0] * integration_time * self.data.inst['eff_tot'] * self.data.options.array['num_outputs']) \
-                         + (noise_thermal[1] * integration_time * self.data.options.array['quantum_eff'] * self.data.options.array['num_outputs'])
+                     + (noise_thermal[1] * integration_time * self.data.options.array['quantum_eff'] * self.data.options.array['num_outputs']) \
+                     + (noise_thermal[2] * integration_time * self.data.inst['eff_tot'] * self.data.options.array['num_outputs'])
         
         # calculate the dark current noise from the detector once, since it is the same for all planets
         noise_dc_list = self.run_socket(s_name='electron_noise_detector',
@@ -710,7 +711,8 @@ class Instrument(InstrumentModule):
 
         # output is two arrays (due to mirror and detector leakage) so combine like this
         noise_inst = (noise_thermal[0] * integration_time * self.data.inst['eff_tot'] * self.data.options.array['num_outputs']) \
-                         + (noise_thermal[1] * integration_time * self.data.options.array['quantum_eff'] * self.data.options.array['num_outputs'])
+                     + (noise_thermal[1] * integration_time * self.data.options.array['quantum_eff'] * self.data.options.array['num_outputs']) \
+                     + (noise_thermal[2] * integration_time * self.data.inst['eff_tot'] * self.data.options.array['num_outputs'])
 
         # calculate the dark current noise from the detector
         noise_dc_list = self.run_socket(s_name='electron_noise_detector',
