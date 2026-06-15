@@ -29,7 +29,8 @@ class YieldAnalysis:
             self.save_path.mkdir(parents=True, exist_ok=True)
 
     def interpolate_one(self, 
-                        source_path):
+                        source_path,
+                        kind_option=None):
         subdirs = [d for d in os.listdir(source_path) if os.path.isdir(os.path.join(source_path, d))]
         diams_float = [extract_float_from_name(d) for d in subdirs]
         diams = [str(value).replace('.', '_') for value in diams_float]
@@ -99,7 +100,9 @@ class YieldAnalysis:
         max_time_table = pd.DataFrame(index=np.sort(max_times), columns=['diameter_mean', 'lu_diameter', 'uu_diameter', 'diameter_opt_factor'])
 
         n = len(mission_time)
-        kind = 'cubic' if n >= 4 else 'quadratic' if n >= 3 else 'linear'
+        kind = kind_option if kind_option is not None else 'cubic' if n >= 4 else 'quadratic' if n >= 3 else 'linear'
+        print(f"INFO: Using {kind} interpolation for {n} data points.")
+
         # make a spline interpolation of all data points in mission time data frame and evaluate at max_times
         spline = interp1d(np.array(mission_time['mission_time_mean'] / 365.25 / 24 / 60 / 60, dtype=float), np.array(mission_time.index, dtype=float), kind=kind, fill_value='extrapolate')
         max_time_table['diameter_mean'] = spline(max_times)
@@ -116,7 +119,7 @@ class YieldAnalysis:
         max_time_table.to_csv(os.path.join(source_path, source_path.split('/')[-1] + '_diameter_mission_time.csv'))
         mission_time.to_csv(os.path.join(source_path, source_path.split('/')[-1] + '_diameter_mission_time_RAW.csv'))
 
-    def run_interpolation(self):
+    def run_interpolation(self, kind_option=None):
         # run the interpolation on all opt_ directories in the given path
 
         # find all subdirectories (and subsub, and so on) in path that start with 'opt_'
@@ -127,7 +130,7 @@ class YieldAnalysis:
                     opt_dirs.append(os.path.join(root, dirname))
 
         for opt_dir in opt_dirs:
-            self.interpolate_one(opt_dir)
+            self.interpolate_one(opt_dir, kind_option=kind_option)
 
     def get_eff_eta(self, 
                     catalog_path):

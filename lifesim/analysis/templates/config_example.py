@@ -14,6 +14,9 @@ run_name =      "primarymirror_sweep" # name of the run, used for naming folders
 option_fullname = "Primary Mirror Temperature" # full name of the option, used for plot labels
 option_unit =   "K"                   # unit of the option, used for plot labels
 
+# analysis options
+kind_option = None # interpolation method to use, e.g. 'linear', 'quadratic', 'cubic' (if None, will be chosen based on number of data points)
+
 # optional LIFEsim and optimizer configuration (leave as none if not using default template)
 lifesim_config_path = None # eg. "/cluster/home/YOUR_USERNAME/LIFEsim/custom_config.yaml"
 # important: must be utf-8 encoded! 

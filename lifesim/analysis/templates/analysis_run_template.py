@@ -11,7 +11,7 @@ ya = lifesim.YieldAnalysis(catalog_folder_path = '$catalog_folder_path',
                            save_path = '$save_path')
 
 
-ya.run_interpolation()
+ya.run_interpolation(kind_option='$kind_option')
 ya.run_eta_summary()
 
 ya.plot_all_single_opts()

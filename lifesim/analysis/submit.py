@@ -69,6 +69,7 @@ def run(config_path: str, steps: list[int] | None = None):
     # analysis
     option_fullname = cfg.option_fullname
     option_unit = cfg.option_unit
+    kind_option = getattr(cfg, "kind_option", None)
 
     # catalogs
     catalog_folders = [f for f in (yields / "catalogs" / catalog_source_date).iterdir() if f.is_dir()]
@@ -230,7 +231,9 @@ def run(config_path: str, steps: list[int] | None = None):
             config_path         = merge_folder / "config_files" / "optimizer_config.yaml",
             save_path           = analysis_folder,
             option_fullname     = option_fullname,
-            option_unit         = option_unit)
+            option_unit         = option_unit,
+            kind_option         = kind_option
+            )
         (analysis_folder / "analysis_run.py").write_text(content)
 
         template_runscript = Template(read_template("run_analysis_template.slurm.sh"))
