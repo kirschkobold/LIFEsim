@@ -45,6 +45,8 @@ class YieldAnalysis:
                 raise ValueError(f'Expected one _mission_time.csv file in {data_path}, found {len(csv_files)}')
             data = pd.read_csv(os.path.join(data_path, csv_files[0]))
             data_finite = data[np.isfinite(data['total'])] # remove any possible inf rows
+            rows_removed = len(data) - len(data_finite)
+            print(f"in {subdir}: Removed {rows_removed} row(s) with non-finite values in 'total' column")
             mission_time.loc[d, 'mission_time_mean'] = data_finite['total'].mean()
             mission_time.loc[d, 'lu_mission_time'] = data_finite['total'].mean() - data_finite['total'].quantile(0.16)
             mission_time.loc[d, 'uu_mission_time'] = data_finite['total'].quantile(0.84) - data_finite['total'].mean()

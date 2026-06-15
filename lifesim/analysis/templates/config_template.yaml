@@ -17,8 +17,8 @@ array:
   primary_temp: 48
   primary_emissivity: 0.025
   d_temp: 23
-  spectro_temp: 23
-  instrument_temp: 23
+  spectro_temp: 27
+  instrument_temp: 40
   pixel_size: 23.e-6
   dc_per_pix: 1
   detector_wl_min: 5.e-6
