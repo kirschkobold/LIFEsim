@@ -79,6 +79,22 @@ class YieldAnalysis:
         mission_time['mission_time_opt_factor'] = add_jitter_to_duplicates(mission_time['mission_time_opt_factor'])
 
         max_times = np.arange(0.5, 20.1, 0.5)
+        
+        # check the overlap for extrapolation
+        target_min, target_max = max_times.min(), max_times.max()
+        mission_times_years = np.array(mission_time['mission_time_mean'], dtype=float) / 365.25 / 24 / 3600
+        data_min, data_max = mission_times_years.min(), mission_times_years.max()
+        overlap_min = max(data_min, target_min)
+        overlap_max = min(data_max, target_max)
+        overlap_range = target_max - target_min
+        
+        if overlap_max <= overlap_min:
+            print(f"WARNING: No input data overlaps the interpolation range [{target_min}, {target_max}] years.")
+            print(f"Input data lies in [{data_min:.2f}, {data_max:.2f}] years.")
+            print(f"Output is pure extrapolation and may be unreliable.")
+        else:
+            overlap_fraction = (overlap_max - overlap_min) / overlap_range
+            print(f"INFO: Overlap fraction of input data with interpolation range is {overlap_fraction:.0%}, rest is extrapolation.")
 
         max_time_table = pd.DataFrame(index=np.sort(max_times), columns=['diameter_mean', 'lu_diameter', 'uu_diameter', 'diameter_opt_factor'])
 
