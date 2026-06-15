@@ -40,6 +40,8 @@ class PhotonNoiseThermal(PhotonNoiseInstrumentModule):
             Thermal leakage of the mirror in [photon s-1] per wavelength bin.
         td_leak
             Thermal leakage of the detector in [photon s-1] per wavelength bin.
+        ti_leak
+            Thermal leakage of the instrument up until the fiber (beam combiner) in [photon s-1] per wavelength bin.
 
         Notes
         -----
@@ -50,7 +52,7 @@ class PhotonNoiseThermal(PhotonNoiseInstrumentModule):
             Contains the half field of view of the observatory in [rad] for each of the spectral bins.
         data.inst['wl_bins'] : np.ndarray
             Central values of the spectral bins in the wavelength regime in [m].
-        data.inst['wl_widths'] : np.ndarray
+        data.inst['wl_bin_widths'] : np.ndarray
             Widths of the spectral wavelength bins in [m].
         data.options.array['primary_temp'] : float
             Temperature of the mirror in [K].
@@ -60,6 +62,8 @@ class PhotonNoiseThermal(PhotonNoiseInstrumentModule):
             Area of all array apertures combined in [m^2].
         data.options.array['num_apertures'] : int
             Number of apertures in the array.
+        data.options.array['instrument_temp'] : float
+            Temperature of the instrument up until the fiber (beam combiner) in [K].
         data.options.array['pixel_size'] : float
             Size of the pixels in [m]. (length of one side of the square pixel)
         data.options.array['pix_per_wl'] : int
