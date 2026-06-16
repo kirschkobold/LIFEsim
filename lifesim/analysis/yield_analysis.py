@@ -31,6 +31,7 @@ class YieldAnalysis:
     def interpolate_one(self, 
                         source_path,
                         kind_option=None):
+        print(f"Processing {source_path}")
         subdirs = [d for d in os.listdir(source_path) if os.path.isdir(os.path.join(source_path, d))]
         diams_float = [extract_float_from_name(d) for d in subdirs]
         diams = [str(value).replace('.', '_') for value in diams_float]
