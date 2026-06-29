@@ -213,6 +213,8 @@ def run(config_path: str, steps: list[int] | None = None):
                 scenario_csv = merge_folder / "config_files" / "optimizer_scenarios.csv")
         (merge_folder / "config_files" / "launch_optimizer.py").write_text(content)
 
+        '''
+        # old version, now step 2 handles the creation of the optimizer_jobs.csv file
         csv_path = merge_folder / "config_files" / "catalog_merge.csv"
         lines = csv_path.read_text(encoding="us-ascii").splitlines()
         basepath = merge_folder
@@ -223,6 +225,7 @@ def run(config_path: str, steps: list[int] | None = None):
                     continue
                 merged_catalog_names = line.split(",")[2]
                 f.write(f"{merged_catalog_names},{basepath}/{merged_catalog_names}/{endpath}\n")
+        '''
 
         template_masterlaunch = BashTemplate(read_template("master_launch_template.slurm.sh"))
         content = template_masterlaunch.substitute(
@@ -241,7 +244,7 @@ def run(config_path: str, steps: list[int] | None = None):
         print(f"  Optimisation job submitted: {opt_job_id}")
 
     ###################################
-    # optimisation 
+    # analysis 
     ###################################
     if 4 in steps:
         print("\n=== step 4: analysis ===")
