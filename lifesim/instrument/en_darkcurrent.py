@@ -49,11 +49,34 @@ class ElectronNoiseDarkCurrent(ElectronNoiseDetectorModule):
             Dark current per pixel in [electron s-1 px-1].
         """
 
+        # get the wavelength bins for the instrument spectral resolution
+        wl_edge = self.data.options.array['wl_min']
+        wl_bins = []
+
+        while wl_edge < self.data.options.array['wl_max']:
+
+            # set the wavelength bin width according to the spectral resolution
+            wl_bin_width = wl_edge / self.data.options.array['spec_res_inst'] / \
+                           (1 - 1 / self.data.options.array['spec_res_inst'] / 2)
+
+            # make the last bin shorter when it hits the wavelength limit
+            if wl_edge + wl_bin_width > self.data.options.array['wl_max']:
+                wl_bin_width = self.data.options.array['wl_max'] - wl_edge
+
+            # calculate the center and edges of the bins
+            wl_center = wl_edge + wl_bin_width / 2
+            wl_edge += wl_bin_width
+
+            wl_bins.append(wl_center)
+        
+        wl_bins = np.array(wl_bins) * 1e-6  # in m
+
         # read data on detector
         dc_per_pix = self.data.options.array['dc_per_pix']
-        total_pixels = self.data.options.array['pix_per_wl'] * self.data.options.array['spec_res_detector'] # minimum number of detector pixels (nyquist rate)
+        res_ratio = len(wl_bins) / len(self.data.inst['wl_bins'])  # ratio of number of bins at spec_res and spec_res_inst
+        # total_pixels = self.data.options.array['pix_per_wl'] * self.data.options.array['spec_res_inst'] # minimum number of detector pixels (nyquist rate)
 
         # calculate total dark current noise
-        dc_leak = np.full(self.data.inst['wl_bins'].shape, dc_per_pix * total_pixels)
+        dc_leak = np.full(self.data.inst['wl_bins'].shape, dc_per_pix * self.data.options.array['pix_per_wl'] * res_ratio)
 
         return dc_leak

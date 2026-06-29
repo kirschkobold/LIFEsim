@@ -317,7 +317,7 @@ class Instrument(InstrumentModule):
         else:
             noise_dc_d = noise_dc_list
         
-        noise_dc = noise_dc_d * integration_time
+        noise_dc = (noise_dc_d * integration_time * self.data.options.array['num_outputs'])
 
         # create mask returning only unique stars
         _, temp = np.unique(self.data.catalog.nstar, return_index=True)
@@ -361,7 +361,7 @@ class Instrument(InstrumentModule):
                 for _, noise in enumerate(noise_bg_list_universe):
                     noise_bg_universe += noise
             else:
-                noise_bg_universe = noise_bg_list_star
+                noise_bg_universe = noise_bg_list_universe
 
             # iterate throgh all universes
             universes = np.unique(self.data.catalog.nuniverse[self.data.catalog.nstar == nstar])
@@ -728,7 +728,7 @@ class Instrument(InstrumentModule):
         else:
             noise_dc_d = noise_dc_list
         
-        noise_dc = noise_dc_d * integration_time
+        noise_dc = noise_dc_d * integration_time * self.data.options.array['num_outputs']
 
         # Add up the noise and calculate the SNR
         noise = (noise_bg + noise_planet + noise_inst + noise_dc)

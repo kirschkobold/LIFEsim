@@ -21,7 +21,7 @@ class Options(object):
             - ``'wl_min'`` : Minimum wavelength of the spectrometer in [microns].
             - ``'wl_max'`` : Maximum wavelength of the spectrometer in [microns].
             - ``'spec_res'`` : Spectral resolution of the spectrometer (dimensionless).
-            - ``'spec_res_detector'`` : Spectral resolution used for the detector, for simulations with lower spec_res (dimensionless).
+            - ``'spec_res_inst'`` : Spectral resolution used for the detector, for simulations with lower spec_res (dimensionless).
             - ``'baseline'`` : Length of the shorter nulling baseline in [m].
             - ``'bl_min'`` : Minimum allowed length of the shorter nulling baseline in [m].
             - ``'bl_max'`` : Maximum allowed length of the shorter nulling baseline in [m].
@@ -87,7 +87,7 @@ class Options(object):
                       'wl_min': 0.,
                       'wl_max': 0.,
                       'spec_res': 0,
-                      'spec_res_detector': 0,
+                      'spec_res_inst': 0,
                       'baseline': 0.,
                       'bl_min': 0.,
                       'bl_max': 0.,
@@ -146,7 +146,7 @@ class Options(object):
         self.array['quantum_eff'] = 0.7
         self.array['throughput'] = 0.05
         self.array['spec_res'] = 20.
-        self.array['spec_res_detector'] = 154
+        self.array['spec_res_inst'] = 100
         self.array['baseline'] = 20.
         self.array['bl_min'] = 10.
         self.array['bl_max'] = 100.
