@@ -256,7 +256,8 @@ def run(config_path: str, steps: list[int] | None = None):
             save_path           = analysis_folder,
             option_fullname     = option_fullname,
             option_unit         = option_unit,
-            kind_option         = kind_option
+            kind_option         = kind_option,
+            catalog_mode        = catalog_mode
             )
         (analysis_folder / "analysis_run.py").write_text(content)
 

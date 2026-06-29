@@ -396,7 +396,7 @@ class YieldAnalysis:
         val_bryson = []
         val_sag = []
 
-        etas = pd.read_csv(Path(self.catalog_folder_path) / f"eta_summary.csv", index_col=0)
+        etas = pd.read_csv(Path(self.catalog_folder_path) / "eta_summary.csv", index_col=0)
 
         for catalog in etas.index:
             source_path = Path(self.catalog_folder_path) / catalog / 'output'
@@ -412,6 +412,19 @@ class YieldAnalysis:
         val_sag = val_sag[val_sag[:, 0].argsort()]  # sort by eta
 
         return val_bryson, val_sag
+
+    def get_scaledeta_vals(self, opt, mtime):
+        vals = []
+
+        etas = pd.read_csv(Path(self.catalog_folder_path) / "eta_summary.csv", index_col=0)
+
+        for catalog in etas.index:
+            source_path = Path(self.catalog_folder_path) / catalog / 'output'
+            catalog_time_tables = self._get_catalog(source_path)
+            vals.append([etas.loc[catalog, 'etas_fgk'], catalog_time_tables[opt]['diameter_mean'].loc[mtime]])
+
+        vals = np.array(vals)
+        return vals[vals[:, 0].argsort()]  # sort by eta
     
     def plot_final_one(self,
                        opt):
@@ -489,7 +502,7 @@ class YieldAnalysis:
         else:
             plt.show()
 
-    def plot_all_final(self):
+    def plot_all_final(self, catalog_mode='default'):
         base = Path(self.catalog_folder_path)
         exclude = {"config_files", "logs"}
         catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
@@ -501,5 +514,68 @@ class YieldAnalysis:
 
         for experiment in experiments_clean:
             print(f"Processing {experiment}...")
-            self.plot_final_one(opt=experiment)
+            if catalog_mode == 'default':
+                self.plot_final_one(opt=experiment)
+            elif catalog_mode == 'scaledetas':
+                self.plot_final_one_scaledetas(opt=experiment)
+    
+    def plot_final_one_scaledetas(self,
+                                  opt):
+        fig, ax = plt.subplots(dpi=200, ncols=2, figsize=(8, 4), gridspec_kw={'width_ratios': [4, 3]})
+
+        exp_str = 'Exp. ' + ' and '.join(p[1:] for p in opt.split('_') if p.startswith('e') and p[1:].isdigit())
+        char_str = 'char. opt.' if 'char' in opt.split('_') else 'not char. opt.'
+        fig.suptitle(f'{exp_str}, {char_str}', fontsize=12, x=0.9, y=0.8, ha='right', va='top')
+
+        vals = self.get_scaledeta_vals(opt=opt, mtime=5)
+        ax[0].plot(vals[:, 0], vals[:, 1], marker='x', linestyle='-', color='tab:orange')
+
+        opt2 = opt.replace('f09', 'f05')
+        vals = self.get_scaledeta_vals(opt=opt2, mtime=5)
+        ax[0].plot(vals[:, 0], vals[:, 1], marker='x', linestyle='-', color='gray')
+
+        handles = [
+            plt.Line2D([0], [0], color='k', linestyle='-', label='Bryson Hab2High'),
+            plt.Line2D([0], [0], marker='x', color='tab:orange', linestyle='', label='to 90%'),
+            plt.Line2D([0], [0], marker='x', color='gray', linestyle='', label='to 50%'),
+        ]
+        ax[0].legend(handles=handles, loc='upper right', title=f'{exp_str}, {char_str}, in 5 years')
+
+        for i, col in zip([5, 10, 15], ['lightgrey', 'gray', 'tab:orange']):
+            vals = self.get_scaledeta_vals(opt=opt, mtime=float(i))
+            ax[1].plot(vals[:, 0], vals[:, 1], marker='x', linestyle='-', color=col)
+        
+        ax[1].yaxis.set_label_position("right")
+        ax[1].yaxis.tick_right()
+
+        handles = [
+            plt.Line2D([0], [0], marker='x', color='tab:orange', linestyle='', label='in 5 yrs'),
+            plt.Line2D([0], [0], marker='x', color='gray', linestyle='', label='in 10 yrs'),
+            plt.Line2D([0], [0], marker='x', color='lightgray', linestyle='', label='in 15 yrs'),
+        ]
+        ax[1].legend(handles=handles, loc='upper right')
+
+        for i in range(2):
+            ax[i].set_xlabel(r'$\eta_\mathrm{Earth, FGK}$; EEC Ratio')
+            ax[i].set_ylabel(f'Required {self.option_name} ({self.option_unit})')
+            ax[i].grid(True, which='both', linestyle='-', linewidth=0.5)
+
+        ymin = min(ax[0].get_ylim()[0], ax[1].get_ylim()[0])
+        ymax = max(ax[0].get_ylim()[1], ax[1].get_ylim()[1])
+        ax[0].set_ylim(ymin, ymax)
+        ax[1].set_ylim(ymin, ymax)
+
+        fig.tight_layout()
+
+        if self.save_path:
+            subfolder = self.save_path / "final_plots"
+            subfolder.mkdir(parents=True, exist_ok=True)
+            plot_name = opt + ".png"  # Path(path).parts[-3] + "_" + Path(path).name + ".png"
+            plt.savefig(subfolder / plot_name, bbox_inches="tight", dpi=300)
+            plt.close()
+        else:
+            plt.show()
+
+            
+
         
