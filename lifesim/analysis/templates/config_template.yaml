@@ -6,7 +6,7 @@ array:
   quantum_eff: 0.6  # quantum efficiency of the detector 
   ratio: 6.0  # ratio between the nulling and the imaging baseline 
   spec_res: 20.0  # spectral resolution R 
-  spec_res_detector: 154.0
+  spec_res_inst: 100.0
   t_efficiency: 0.8  # duty cycle of the mission, i.e. here 80% of on-target time is spend integrating photons 
   t_slew: 36000.0  # slew time in s 
   throughput: 0.15  # total system throughput 
