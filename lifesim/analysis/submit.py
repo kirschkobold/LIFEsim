@@ -54,6 +54,7 @@ def run(config_path: str, steps: list[int] | None = None):
     # run dates
     today               = cfg.today
     catalog_source_date = cfg.catalog_source_date
+    catalog_mode        = cfg.catalog_mode
     queue               = cfg.queue
 
     # sweep options
@@ -72,8 +73,12 @@ def run(config_path: str, steps: list[int] | None = None):
     kind_option = getattr(cfg, "kind_option", None)
 
     # catalogs
-    catalog_folders = [f for f in (yields / "catalogs" / catalog_source_date).iterdir() if f.is_dir()]
-    catalogs        = [(f.name, f.name.split("_", 3)[-1]) for f in catalog_folders]
+    if catalog_mode == "default":
+        catalog_folders = [f for f in (yields / "catalogs" / catalog_source_date).iterdir() if f.is_dir()]
+        catalogs = [(f.name, f.name.split("_", 3)[-1]) for f in catalog_folders]
+    elif catalog_mode == "scaledetas":
+        catalog_files = [f for f in (yields / "catalogs" / catalog_source_date).iterdir() if f.is_file() and f.suffix == ".txt"]
+        catalogs = [(f.stem, f.stem.split("_", 3)[-1]) for f in catalog_files]
 
     # folders for outputs
     merge_folder    = yields / "runs" / f"{today}_merge"
@@ -98,9 +103,14 @@ def run(config_path: str, steps: list[int] | None = None):
             shutil.rmtree(run_folder / "outputs", ignore_errors=True)
             (run_folder / "output").mkdir(exist_ok=True)
 
+            if catalog_mode == "default":
+                catalog_path = yields / "catalogs" / catalog_source_date / full_name / f"{full_name}.txt"
+            elif catalog_mode == "scaledetas":
+                catalog_path = yields / "catalogs" / catalog_source_date / f"{full_name}.txt"
+
             content = template_runyields.substitute(
                 config_path   = yields / "runs" / today / "custom_config.yaml",
-                catalog_path  = yields / "catalogs" / catalog_source_date / full_name/ f"{full_name}.txt",
+                catalog_path  = catalog_path,
                 output_path   = run_folder / "output",
                 option_name   = option_name,
                 option_values = option_values,

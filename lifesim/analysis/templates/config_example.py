@@ -5,6 +5,7 @@ venv_path = "/cluster/home/YOUR_USERNAME/LIFEsim/venv/bin/activate"   # path to 
 # per run configurations
 today = "20260429"                 # format: YYYYMMDD
 catalog_source_date = "20260421"   # format: YYYYMMDD, date of the imported catalogs
+catalog_mode = "default"                  # either "default" or "scaledetas"
 queue = "public"                   # alternatively es_quanz
 
 # sweep options
