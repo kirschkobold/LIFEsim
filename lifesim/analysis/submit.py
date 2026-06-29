@@ -146,27 +146,38 @@ def run(config_path: str, steps: list[int] | None = None):
         (merge_folder / "logs").mkdir(exist_ok=True)
         (merge_folder / "config_files").mkdir(exist_ok=True)
 
-        template_runmerger = Template(read_template("run_merger_template.py"))
-        content = template_runmerger.substitute(
-                mapping_csv = merge_folder / "config_files" / "catalog_files.csv",
-                merge_csv   = merge_folder / "config_files" / "catalog_merge.csv",
-                output_path = str(merge_folder) + "/",
-                output_path2 = str(merge_folder))
-        (merge_folder / "config_files" / "run_merger.py").write_text(content)
+        if catalog_mode == "default":
+            template_runmerger = Template(read_template("run_merger_template.py"))
+            content = template_runmerger.substitute(
+                    mapping_csv = merge_folder / "config_files" / "catalog_files.csv",
+                    merge_csv   = merge_folder / "config_files" / "catalog_merge.csv",
+                    output_path = str(merge_folder) + "/",
+                    output_path2 = str(merge_folder))
+            (merge_folder / "config_files" / "run_merger.py").write_text(content)
 
-        basepath = (yields / "runs" / today)
-        endpath = "output/" + str(run_name) + "/"
-        with open(merge_folder / "config_files" / "catalog_files.csv", "w") as f:
-            f.write("Catalog Name,Catalog Path\n")
-            for full_name, short_name in catalogs:
-                f.write(f"{short_name},{basepath}/{today}_{short_name}/{endpath}\n")
+            basepath = (yields / "runs" / today)
+            endpath = "output/" + str(run_name) + "/"
+            with open(merge_folder / "config_files" / "catalog_files.csv", "w") as f:
+                f.write("Catalog Name,Catalog Path\n")
+                for full_name, short_name in catalogs:
+                    f.write(f"{short_name},{basepath}/{today}_{short_name}/{endpath}\n")
 
-        if catalog_merge_path is not None:
-            raw = Path(catalog_merge_path).read_text()
-        else:
-            raw = read_template("catalog_merge_template.csv")
-        content = Template(raw).safe_substitute(today=today)
-        (merge_folder / "config_files" / "catalog_merge.csv").write_text(content, encoding="us-ascii")
+            if catalog_merge_path is not None:
+                raw = Path(catalog_merge_path).read_text()
+            else:
+                raw = read_template("catalog_merge_template.csv")
+            content = Template(raw).safe_substitute(today=today)
+            (merge_folder / "config_files" / "catalog_merge.csv").write_text(content, encoding="us-ascii")
+        
+        elif catalog_mode == "scaledetas":
+            template_runmerger = Template(read_template("run_merger_scaledetas_template.py"))
+            content = template_runmerger.substitute(
+                merge_folder = merge_folder,
+                catalogs     = catalogs,
+                basepath     = yields / "runs" / today,
+                run_name     = run_name,
+                today        = today)
+            (merge_folder / "config_files" / "run_merger.py").write_text(content)
 
         template_launchmerger = Template(read_template("launch_merger_template.slurm.sh"))
         content = template_launchmerger.substitute(
