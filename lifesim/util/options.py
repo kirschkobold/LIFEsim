@@ -158,16 +158,19 @@ class Options(object):
         self.array['t_slew'] = 10. * 60. * 60.
         self.array['t_efficiency'] = 0.8
         self.array['pixel_size'] = 23 * 1e-6
-        # self.array['dc_per_pix'] = 1
+        self.array['dc_per_pix'] = 1
         self.array['pix_per_wl'] = 2.2
         self.array['num_apertures'] = 4
         self.array['num_outputs'] = 2
         self.array['on_axis_null_depth'] = None
 
+        self.thermal['ota_temperature'] = 48
         self.thermal['ota_emissivity'] = 0.06
         self.thermal['ota_throughput'] = 0.94
+        self.thermal['instrument_temperature'] = 40
         self.thermal['instrument_emissivity'] = 1.
         self.thermal['instrument_throughput'] = 1.
+        self.thermal['detector_temperature'] = 20
         self.thermal['detector_wl_min'] = 5e-6
         self.thermal['detector_wl_max'] = 28e-6
 

@@ -1,3 +1,4 @@
+'''
 # Top of run_tse.py, BEFORE any other imports.
 # astroquery.gaia.core runs `Gaia = GaiaClass()` at import time, which
 # calls get_status_messages() -> a blocking HTTP GET to ESA's TAP server.
@@ -515,15 +516,16 @@ def jy_to_photons(flux_jy, wavelength):
     return flux
 
 def get_flux_filter(filter_id, magnitude):
-    '''
-    Converts filter magnitude into photon flux with units ph s-1 m-2 µm-1
-    :param filter_id:
-    :param magnitude:
-    :return:
-    '''
+
+    # Converts filter magnitude into photon flux with units ph s-1 m-2 µm-1
+    # :param filter_id:
+    # :param magnitude:
+    # :return:
+
     info = get_svo_filter_info(filter_id)
     wavelength = (float(info["WavelengthCen"]) * u.AA).to(u.micron)
     zp_jy = float(info["ZeroPoint"]) * u.Unit(info["ZeroPointUnit"])
 
     flux_ph = jy_to_photons(zp_jy, wavelength) * 10**(-magnitude/2.5)
     return flux_ph
+'''
