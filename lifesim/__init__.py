@@ -22,5 +22,5 @@ from lifesim.analysis.yield_wrapper import ScienceYield
 
 from lifesim.analysis.yield_analysis import YieldAnalysis
 
-from lifesim.analysis.etc import etc
+from lifesim.analysis.etc import etc, SourceConfig
 
