@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=@queue
 #SBATCH --job-name=@job_name
-#SBATCH --array=1-7%7        # Run tasks 1 through 7, allow 7 to run at once
+#SBATCH --array=1-@n_jobs%@n_jobs        # Run tasks 1 through N, allow N to run at once
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=22
 #SBATCH --mem-per-cpu=4G
