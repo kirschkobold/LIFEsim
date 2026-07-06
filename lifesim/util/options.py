@@ -121,7 +121,7 @@ class Options(object):
                       'n_cpu': 1}
 
         self.models = {'localzodi': '',
-                       'habitable': '',
+                       'hz_model': '',
                        'fov_taper': ''}
 
         self.optimization = {'N_pf': 0.,

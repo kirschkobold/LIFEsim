@@ -31,7 +31,7 @@ thermal:
   detector_wl_max: 28.e-6 
 models:
   fov_taper: gaussian  # type of FoV taper, I recommend Gaussian 
-  habitable: MS  # type of habitable zone mode (MS = main sequence). Does not matter at this stage 
+  hz_model: MS  # type of habitable zone mode (MS = main sequence). Does not matter at this stage 
   localzodi: darwinsim  # localzodi model
 optimization:
   N_pf: 25  # deprecated but must be in included for compatibility
