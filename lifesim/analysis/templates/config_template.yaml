@@ -14,17 +14,21 @@ array:
   wl_min: 4.0  # short wavelength cutoff in microm 
   num_apertures: 4
   num_outputs: 2
-  primary_temp: 48
-  primary_emissivity: 0.025
-  d_temp: 23
-  spectro_temp: 27
-  instrument_temp: 40
   pixel_size: 23.e-6
   dc_per_pix: 1
-  detector_wl_min: 5.e-6
-  detector_wl_max: 28.e-6
   pix_per_wl: 2.2
   fixed_baseline: false
+  on_axis_null_depth: None
+thermal:
+  ota_temperature: 48
+  ota_emissivity: 0.06  
+  ota_throughput: 0.94 
+  instrument_temperature: 40
+  instrument_emissivity: 1.
+  instrument_throughput: 1.
+  detector_temperature: 23
+  detector_wl_min: 5.e-6 
+  detector_wl_max: 28.e-6 
 models:
   fov_taper: gaussian  # type of FoV taper, I recommend Gaussian 
   habitable: MS  # type of habitable zone mode (MS = main sequence). Does not matter at this stage 
