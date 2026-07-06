@@ -102,6 +102,8 @@ class AhgsModule(SlopeModule):
             raise ValueError('Delete mode not implemented for AHGS optimizer.')
 
     def distribute_time(self):
+        max_experiment_time = 50 * 365.25 * 24 * 60 * 60
+
         stars, n = np.unique(ar=self.data.catalog.nstar,
                              return_counts=True)
         if self.data.options.optimization['characterization']:
@@ -242,6 +244,6 @@ class AhgsModule(SlopeModule):
             if self.data.options.optimization['opt_limit'] == 'time':
                 run_bool = self.tot_time < obs_time
             elif self.data.options.optimization['opt_limit'] == 'experiments':
-                run_bool = not all(self.data.optm['hit_limit'].values())
+                run_bool = (not all(self.data.optm['hit_limit'].values()) and self.tot_time < max_experiment_time)
             else:
                 raise ValueError('Optimization limit not recognized.')

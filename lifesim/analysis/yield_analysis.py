@@ -432,7 +432,6 @@ class YieldAnalysis:
 
         exp_str = 'Exp. ' + ' and '.join(p[1:] for p in opt.split('_') if p.startswith('e') and p[1:].isdigit())
         char_str = 'char. opt.' if 'char' in opt.split('_') else 'not char. opt.'
-        fig.suptitle(f'{exp_str}, {char_str}', fontsize=12, x=0.9, y=0.8, ha='right', va='top')
 
         val_bryson, val_sag = self.separate_bryson_sag(opt=opt, mtime=5)
         ax[0].plot(val_sag[:, 0], val_sag[:, 1], marker='x', linestyle='-', label='SxD', color='tab:orange')
@@ -475,7 +474,7 @@ class YieldAnalysis:
             plt.Line2D([0], [0], marker='x', color='gray', linestyle='', label='in 10 yrs'),
             plt.Line2D([0], [0], marker='x', color='lightgray', linestyle='', label='in 15 yrs'),
         ]
-        ax[1].legend(handles=handles, loc='upper right')
+        ax[1].legend(handles=handles, loc='upper right', title=f'{exp_str}, {char_str}')
 
         for i in range(2):
             ax[i].set_xlabel(r'$\eta_\mathrm{Earth, FGK}$; EEC Ratio')
@@ -525,7 +524,6 @@ class YieldAnalysis:
 
         exp_str = 'Exp. ' + ' and '.join(p[1:] for p in opt.split('_') if p.startswith('e') and p[1:].isdigit())
         char_str = 'char. opt.' if 'char' in opt.split('_') else 'not char. opt.'
-        fig.suptitle(f'{exp_str}, {char_str}', fontsize=12, x=0.9, y=0.8, ha='right', va='top')
 
         vals = self.get_scaledeta_vals(opt=opt, mtime=5)
         ax[0].plot(vals[:, 0], vals[:, 1], marker='x', linestyle='-', color='tab:orange')
@@ -553,7 +551,7 @@ class YieldAnalysis:
             plt.Line2D([0], [0], marker='x', color='gray', linestyle='', label='in 10 yrs'),
             plt.Line2D([0], [0], marker='x', color='lightgray', linestyle='', label='in 15 yrs'),
         ]
-        ax[1].legend(handles=handles, loc='upper right')
+        ax[1].legend(handles=handles, loc='upper right', title=f'{exp_str}, {char_str}')
 
         for i in range(2):
             ax[i].set_xlabel(r'$\eta_\mathrm{Earth, FGK}$; EEC Ratio')
