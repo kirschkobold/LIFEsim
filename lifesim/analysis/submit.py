@@ -227,10 +227,6 @@ def run(config_path: str, steps: list[int] | None = None):
                 f.write(f"{merged_catalog_names},{basepath}/{merged_catalog_names}/{endpath}\n")
         '''
 
-        optjobs_csv_path = merge_folder / "config_files" / "optimizer_jobs.csv"
-        with open(optjobs_csv_path, "r") as f:
-            n_jobs = sum(1 for line in f if line.strip())
-
         template_masterlaunch = BashTemplate(read_template("master_launch_template.slurm.sh"))
         content = template_masterlaunch.substitute(
             job_name     = f"{today}_optimizer",
@@ -238,8 +234,7 @@ def run(config_path: str, steps: list[int] | None = None):
             optjobs_path = merge_folder / "config_files" / "optimizer_jobs.csv",
             python_run   = merge_folder / "config_files" / "launch_optimizer.py",
             venv_path    = venv_path,
-            queue        = queue, 
-            n_jobs       = n_jobs)
+            queue        = queue)
         (merge_folder / "config_files" / "master_launch.slurm.sh").write_text(content)
 
         opt_job_id = submit(

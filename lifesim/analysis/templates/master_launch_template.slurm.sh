@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=@queue
 #SBATCH --job-name=@job_name
-#SBATCH --array=1-@n_jobs%@n_jobs        # Run tasks 1 through N, allow N to run at once
+#SBATCH --array=1-10%10        # Run tasks 1 through N, allow N to run at once
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=22
 #SBATCH --mem-per-cpu=4G
@@ -11,6 +11,13 @@
 # 1. Load Environments
 module load python
 source @venv_path
+
+# match the number of tasks to the number of lines in the CSV file
+N_REAL=$(grep -c . "@optjobs_path")
+if [ "$SLURM_ARRAY_TASK_ID" -gt "$N_REAL" ]; then
+    echo "Task $SLURM_ARRAY_TASK_ID exceeds real job count ($N_REAL). Exiting cleanly."
+    exit 0
+fi
 
 # 2. Extract parameters from the CSV file based on the Task ID
 # We use 'sed' to grab the specific line number matching the array index
