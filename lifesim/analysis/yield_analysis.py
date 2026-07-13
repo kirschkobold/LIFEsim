@@ -110,8 +110,28 @@ class YieldAnalysis:
         # for uncertainties, do linear interpolation of upper and lower bounds
         spline_lu = interp1d(np.array((mission_time['mission_time_mean'] - mission_time['lu_mission_time']) / 365.25 / 24 / 60 / 60, dtype=float), np.array(mission_time.index, dtype=float), kind='linear', fill_value='extrapolate')
         spline_uu = interp1d(np.array((mission_time['mission_time_mean'] + mission_time['uu_mission_time']) / 365.25 / 24 / 60 / 60, dtype=float), np.array(mission_time.index, dtype=float), kind='linear', fill_value='extrapolate')
-        max_time_table['lu_diameter'] = max_time_table['diameter_mean'] - spline_lu(max_times)
-        max_time_table['uu_diameter'] = spline_uu(max_times) - max_time_table['diameter_mean']
+
+        # detect whether option (diameter) increases or decreases with mission time for this scenario; to adjust lower/upper bounds
+        time_years_arr = np.array(mission_time['mission_time_mean'] / 365.25 / 24 / 60 / 60, dtype=float)
+        diam_arr = np.array(mission_time.index, dtype=float)
+        slope = np.polyfit(time_years_arr, diam_arr, 1)[0]
+        increasing = slope > 0
+
+        lower_bound_diam = spline_lu(max_times)
+        upper_bound_diam = spline_uu(max_times)
+
+        if increasing:
+            max_time_table['lu_diameter'] = max_time_table['diameter_mean'] - lower_bound_diam
+            max_time_table['uu_diameter'] = upper_bound_diam - max_time_table['diameter_mean']
+        else:
+            max_time_table['lu_diameter'] = upper_bound_diam - max_time_table['diameter_mean']
+            max_time_table['uu_diameter'] = max_time_table['diameter_mean'] - lower_bound_diam
+
+        neg_lu = (max_time_table['lu_diameter'] < 0).sum()
+        neg_uu = (max_time_table['uu_diameter'] < 0).sum()
+        if neg_lu or neg_uu:
+            print(f"WARNING: {neg_lu} negative lu_diameter and {neg_uu} negative uu_diameter values remain, so data may be non-monotonic.")
+
         # for optimal factor diameters
         spline_opt = interp1d(np.array(mission_time['mission_time_opt_factor'] / 365.25 / 24 / 60 / 60, dtype=float), np.array(mission_time.index, dtype=float), kind=kind, fill_value='extrapolate')
         max_time_table['diameter_opt_factor'] = spline_opt(max_times)
