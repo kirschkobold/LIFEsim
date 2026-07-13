@@ -166,7 +166,7 @@ class YieldAnalysis:
         bus.data.catalog.l_sun,
         bus.data.catalog.hz_in,
         bus.data.catalog.hz_out,
-        bus.data.catalog.hz_center) = single_habitable_zone(model='Kopparapu-Conservative',
+        bus.data.catalog.hz_center) = single_habitable_zone(model=bus.data.options.models['hz_model'],
                                                             temp_s=bus.data.catalog.temp_s,
                                                             radius_s=bus.data.catalog.radius_s)
 
