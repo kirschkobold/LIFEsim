@@ -594,6 +594,61 @@ class YieldAnalysis:
         else:
             plt.show()
 
-            
+    def final_plots_data(self, catalog_mode='default'):
+        base = Path(self.catalog_folder_path)
+        exclude = {"config_files", "logs"}
+        catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
+
+        experiments_path = Path(self.catalog_folder_path) / catalogs[0] / "output"
+        exclude = {"ap_merged"}
+        experiments = sorted(p.name for p in experiments_path.iterdir() if p.is_dir() and p.name not in exclude and 'f09' in p.name)
+        experiments_clean = [s.removeprefix('opt_') for s in experiments]
+
+        subfolder = self.save_path / "final_plots_data"
+        subfolder.mkdir(parents=True, exist_ok=True)
+
+        for opt in experiments_clean:
+            print(f"Collecting data for {opt}...")
+            records = []
+
+            if catalog_mode == 'default':
+                val_bryson, val_sag = self.separate_bryson_sag(opt=opt, mtime=5)
+                for eta, diam in val_sag:
+                    records.append(dict(panel='left', target='f09', mtime=5, model='SAG', eta=eta, diameter=diam))
+                for eta, diam in val_bryson:
+                    records.append(dict(panel='left', target='f09', mtime=5, model='Bryson', eta=eta, diameter=diam))
+
+                opt2 = opt.replace('f09', 'f05')
+                val_bryson, val_sag = self.separate_bryson_sag(opt=opt2, mtime=5)
+                for eta, diam in val_sag:
+                    records.append(dict(panel='left', target='f05', mtime=5, model='SAG', eta=eta, diameter=diam))
+                for eta, diam in val_bryson:
+                    records.append(dict(panel='left', target='f05', mtime=5, model='Bryson', eta=eta, diameter=diam))
+
+                for i in [5, 10, 15]:
+                    val_bryson, val_sag = self.separate_bryson_sag(opt=opt, mtime=float(i))
+                    for eta, diam in val_sag:
+                        records.append(dict(panel='right', target='f09', mtime=i, model='SAG', eta=eta, diameter=diam))
+                    for eta, diam in val_bryson:
+                        records.append(dict(panel='right', target='f09', mtime=i, model='Bryson', eta=eta, diameter=diam))
+
+            elif catalog_mode == 'scaledetas':
+                vals = self.get_scaledeta_vals(opt=opt, mtime=5)
+                for eta, diam in vals:
+                    records.append(dict(panel='left', target='f09', mtime=5, eta=eta, diameter=diam))
+
+                opt2 = opt.replace('f09', 'f05')
+                vals = self.get_scaledeta_vals(opt=opt2, mtime=5)
+                for eta, diam in vals:
+                    records.append(dict(panel='left', target='f05', mtime=5, eta=eta, diameter=diam))
+
+                for i in [5, 10, 15]:
+                    vals = self.get_scaledeta_vals(opt=opt, mtime=float(i))
+                    for eta, diam in vals:
+                        records.append(dict(panel='right', target='f09', mtime=i, eta=eta, diameter=diam))
+
+            df = pd.DataFrame(records)
+            csv_name = opt + "_data.csv"
+            df.to_csv(subfolder / csv_name, index=False)
 
         
