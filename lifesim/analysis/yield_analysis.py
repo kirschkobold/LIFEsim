@@ -8,6 +8,7 @@ from scipy.interpolate import interp1d
 from tqdm import tqdm
 import seaborn as sns
 from pathlib import Path
+from scipy.optimize import curve_fit
 
 import lifesim
 from lifesim.util.habitable import single_habitable_zone
@@ -651,4 +652,82 @@ class YieldAnalysis:
             csv_name = opt + "_data.csv"
             df.to_csv(subfolder / csv_name, index=False)
 
-        
+
+    def _model_func(x, a, b):
+        return a * x**b     
+
+    from scipy.optimize import curve_fit
+
+    def plot_final_fit_default(self, opt):
+        for mtime in [5, 10, 15]:
+            val_bryson, val_sag = self.separate_bryson_sag(opt=opt, mtime=float(mtime))
+            val_tot = np.vstack([val_sag, val_bryson])
+
+            p0 = [1, -1]
+            popt_tot, _ = curve_fit(self._model_func, val_tot[:, 0], val_tot[:, 1], p0=p0, maxfev=10000)
+            popt_sag, _ = curve_fit(self._model_func, val_sag[:, 0], val_sag[:, 1], p0=p0, maxfev=10000)
+            popt_bry, _ = curve_fit(self._model_func, val_bryson[:, 0], val_bryson[:, 1], p0=p0, maxfev=10000)
+
+            fig, ax = plt.subplots(dpi=200)
+
+            ax.scatter(val_sag[:, 0], val_sag[:, 1], marker='x', label='SxD', color='tab:orange')
+            ax.scatter(val_bryson[:, 0], val_bryson[:, 1], marker='x', label='BxD', color='k')
+
+            x = np.linspace(val_tot[:, 0].min(), val_tot[:, 0].max(), 200)
+            ax.plot(x, self._model_func(x, *popt_tot), label=f'fit_tot = {round(popt_tot[1], 2)}', color='tab:blue')
+            ax.plot(x, self._model_func(x, *popt_sag), label=f'fit_sag = {round(popt_sag[1], 2)}', color='tab:orange')
+            ax.plot(x, self._model_func(x, *popt_bry), label=f'fit_bry = {round(popt_bry[1], 2)}', color='green')
+
+            ax.set_xlabel(r'$\eta_\mathrm{Earth, FGK}$; EEC Ratio')
+            ax.set_ylabel(f'Required {self.option_name} ({self.option_unit})')
+            ax.set_title(f'{opt}, in {mtime} years')
+            ax.legend()
+
+            if self.save_path:
+                subfolder = self.save_path / "final_fit"
+                subfolder.mkdir(parents=True, exist_ok=True)
+                plt.savefig(subfolder / f"{opt}_mtime_{mtime}.png", bbox_inches="tight", dpi=300)
+                plt.close()
+            else:
+                plt.show()
+
+    def plot_final_fit_scaledetas(self, opt):
+        for mtime in [5, 10, 15]:
+            vals = self.get_scaledeta_vals(opt=opt, mtime=float(mtime))
+
+            p0 = [1, -1]
+            popt_tot, _ = curve_fit(self._model_func, vals[:, 0], vals[:, 1], p0=p0, maxfev=10000)
+
+            fig, ax = plt.subplots(dpi=200)
+
+            ax.scatter(vals[:, 0], vals[:, 1], marker='x', label='Data', color='k')
+
+            x = np.linspace(vals[:, 0].min(), vals[:, 0].max(), 200)
+            ax.plot(x, self._model_func(x, *popt_tot), label=f'fit_tot = {round(popt_tot[1], 2)}', color='tab:blue')
+
+            ax.set_xlabel(r'$\eta_\mathrm{Earth, FGK}$; EEC Ratio')
+            ax.set_ylabel(f'Required {self.option_name} ({self.option_unit})')
+            ax.set_title(f'{opt}, in {mtime} years')
+            ax.legend()
+
+            if self.save_path:
+                subfolder = self.save_path / "final_fit"
+                subfolder.mkdir(parents=True, exist_ok=True)
+                plt.savefig(subfolder / f"{opt}_mtime_{mtime}.png", bbox_inches="tight", dpi=300)
+                plt.close()
+            else:
+                plt.show()
+
+    def plot_final_fit(self, catalog_mode='default'):
+        base = Path(self.catalog_folder_path)
+        exclude = {"config_files", "logs"}
+        catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
+
+        experiments_path = Path(self.catalog_folder_path) / catalogs[0] / "output"
+        exclude = {"ap_merged"}
+        experiments = sorted(p.name for p in experiments_path.iterdir() if p.is_dir() and p.name not in exclude and 'f09' in p.name)
+        experiments_clean = [s.removeprefix('opt_') for s in experiments]
+
+        for opt in experiments_clean:
+            print(f"Fitting {opt}...")
+            self.plot_final_fit(opt=opt, catalog_mode=catalog_mode) 
