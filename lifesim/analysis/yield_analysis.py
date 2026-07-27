@@ -50,6 +50,11 @@ class YieldAnalysis:
             data_finite = data[np.isfinite(data['total'])] # remove any possible inf rows
             rows_removed = len(data) - len(data_finite)
             print(f"in {subdir}: Removed {rows_removed} row(s) with non-finite values in 'total' column")
+            # skip this diameter entirely if too few valid rows remain
+            min_rows = 10
+            if len(data_finite) < min_rows:
+                print(f"WARNING: Skipping {subdir} (diameter={d}): only {len(data_finite)} finite row(s) remain (< {min_rows}), not enough for reliable statistics.")
+                continue
             mission_time.loc[d, 'mission_time_mean'] = data_finite['total'].mean()
             mission_time.loc[d, 'lu_mission_time'] = data_finite['total'].mean() - data_finite['total'].quantile(0.16)
             mission_time.loc[d, 'uu_mission_time'] = data_finite['total'].quantile(0.84) - data_finite['total'].mean()
@@ -102,6 +107,9 @@ class YieldAnalysis:
         max_time_table = pd.DataFrame(index=np.sort(max_times), columns=['diameter_mean', 'lu_diameter', 'uu_diameter', 'diameter_opt_factor'])
 
         n = len(mission_time)
+        if len(mission_time) < 2:
+            print(f"WARNING: Only {len(mission_time)} valid diameter(s) remain after filtering — cannot interpolate. Skipping {source_path}.")
+            return
         kind = kind_option if kind_option is not None else 'cubic' if n >= 4 else 'quadratic' if n >= 3 else 'linear'
         print(f"INFO: Using {kind} interpolation for {n} data points.")
 
@@ -653,10 +661,8 @@ class YieldAnalysis:
             df.to_csv(subfolder / csv_name, index=False)
 
 
-    def _model_func(x, a, b):
+    def _model_func(self, x, a, b):
         return a * x**b     
-
-    from scipy.optimize import curve_fit
 
     def plot_final_fit_default(self, opt):
         for mtime in [5, 10, 15]:
