@@ -736,4 +736,7 @@ class YieldAnalysis:
 
         for opt in experiments_clean:
             print(f"Fitting {opt}...")
-            self.plot_final_fit(opt=opt, catalog_mode=catalog_mode) 
+            if catalog_mode == 'default':
+                self.plot_final_fit_default(opt=opt)
+            elif catalog_mode == 'scaledetas':
+                self.plot_final_fit_scaledetas(opt=opt)
