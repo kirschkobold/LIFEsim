@@ -455,7 +455,7 @@ class YieldAnalysis:
         vals = np.array(vals)
         return vals[vals[:, 0].argsort()]  # sort by eta
     
-    def plot_final_one(self,
+    def plot_final_one_default(self,
                        opt):
         fig, ax = plt.subplots(dpi=200, ncols=2, figsize=(8, 4), gridspec_kw={'width_ratios': [4, 3]})
 
@@ -530,23 +530,6 @@ class YieldAnalysis:
         else:
             plt.show()
 
-    def plot_all_final(self, catalog_mode='default'):
-        base = Path(self.catalog_folder_path)
-        exclude = {"config_files", "logs"}
-        catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
-
-        experiments_path = Path(self.catalog_folder_path) / catalogs[0] / "output"
-        exclude = {"ap_merged"}
-        experiments = sorted(p.name for p in experiments_path.iterdir() if p.is_dir() and p.name not in exclude and 'f09' in p.name)
-        experiments_clean = [s.removeprefix('opt_') for s in experiments]
-
-        for experiment in experiments_clean:
-            print(f"Processing {experiment}...")
-            if catalog_mode == 'default':
-                self.plot_final_one(opt=experiment)
-            elif catalog_mode == 'scaledetas':
-                self.plot_final_one_scaledetas(opt=experiment)
-    
     def plot_final_one_scaledetas(self,
                                   opt):
         fig, ax = plt.subplots(dpi=200, ncols=2, figsize=(8, 4), gridspec_kw={'width_ratios': [4, 3]})
@@ -597,11 +580,28 @@ class YieldAnalysis:
         if self.save_path:
             subfolder = self.save_path / "final_plots"
             subfolder.mkdir(parents=True, exist_ok=True)
-            plot_name = opt + ".png"  # Path(path).parts[-3] + "_" + Path(path).name + ".png"
+            plot_name = opt + ".png"
             plt.savefig(subfolder / plot_name, bbox_inches="tight", dpi=300)
             plt.close()
         else:
             plt.show()
+
+    def plot_all_final(self, catalog_mode='default'):
+        base = Path(self.catalog_folder_path)
+        exclude = {"config_files", "logs"}
+        catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
+
+        experiments_path = Path(self.catalog_folder_path) / catalogs[0] / "output"
+        exclude = {"ap_merged"}
+        experiments = sorted(p.name for p in experiments_path.iterdir() if p.is_dir() and p.name not in exclude and 'f09' in p.name)
+        experiments_clean = [s.removeprefix('opt_') for s in experiments]
+
+        for experiment in experiments_clean:
+            print(f"Processing {experiment}...")
+            if catalog_mode == 'default':
+                self.plot_final_one_default(opt=experiment)
+            elif catalog_mode == 'scaledetas':
+                self.plot_final_one_scaledetas(opt=experiment)
 
     def final_plots_data(self, catalog_mode='default'):
         base = Path(self.catalog_folder_path)
@@ -660,66 +660,133 @@ class YieldAnalysis:
             csv_name = opt + "_data.csv"
             df.to_csv(subfolder / csv_name, index=False)
 
-
     def _model_func(self, x, a, b):
-        return a * x**b     
+        return a * x**b 
 
-    def plot_final_fit_default(self, opt):
-        for mtime in [5, 10, 15]:
-            val_bryson, val_sag = self.separate_bryson_sag(opt=opt, mtime=float(mtime))
-            val_tot = np.vstack([val_sag, val_bryson])
+    def plot_final_fit_one_default(self, opt):
+        opt2 = opt.replace('f09', 'f05')
 
-            p0 = [1, -1]
-            popt_tot, _ = curve_fit(self._model_func, val_tot[:, 0], val_tot[:, 1], p0=p0, maxfev=10000)
-            popt_sag, _ = curve_fit(self._model_func, val_sag[:, 0], val_sag[:, 1], p0=p0, maxfev=10000)
-            popt_bry, _ = curve_fit(self._model_func, val_bryson[:, 0], val_bryson[:, 1], p0=p0, maxfev=10000)
+        exp_str = 'Exp. ' + ' and '.join(p[1:] for p in opt.split('_') if p.startswith('e') and p[1:].isdigit())
+        char_str = 'char. opt.' if 'char' in opt.split('_') else 'not char. opt.'
 
-            fig, ax = plt.subplots(dpi=200)
+        colors = {5: 'lightgrey', 10: 'gray', 15: 'tab:orange'}
+        p0 = [1, -1]
 
-            ax.scatter(val_sag[:, 0], val_sag[:, 1], marker='x', label='SxD', color='tab:orange')
-            ax.scatter(val_bryson[:, 0], val_bryson[:, 1], marker='x', label='BxD', color='k')
+        all_y = []
+        for target_opt in [opt, opt2]:
+            for mtime in colors:
+                val_bryson, val_sag = self.separate_bryson_sag(opt=target_opt, mtime=float(mtime))
+                all_y.append(val_sag[:, 1])
+                all_y.append(val_bryson[:, 1])
 
-            x = np.linspace(val_tot[:, 0].min(), val_tot[:, 0].max(), 200)
-            ax.plot(x, self._model_func(x, *popt_tot), label=f'fit_tot = {round(popt_tot[1], 2)}', color='tab:blue')
-            ax.plot(x, self._model_func(x, *popt_sag), label=f'fit_sag = {round(popt_sag[1], 2)}', color='tab:orange')
-            ax.plot(x, self._model_func(x, *popt_bry), label=f'fit_bry = {round(popt_bry[1], 2)}', color='green')
+        all_y = np.concatenate(all_y)
+        y_low, y_high = np.percentile(all_y, (5, 95))
+
+        for target_opt, target_pct in [(opt, '90%'), (opt2, '50%')]:
+            fig, ax = plt.subplots(dpi=200, figsize=(5, 4.5))
+
+            for mtime, col in colors.items():
+                val_bryson, val_sag = self.separate_bryson_sag(opt=target_opt, mtime=float(mtime))
+                for vals, ls in [(val_sag, '-'), (val_bryson, '--')]:
+                    x = np.asarray(vals[:, 0], dtype=float)
+                    y = np.asarray(vals[:, 1], dtype=float)
+                    ax.scatter(x, y, marker='x', color=col)
+
+                    if len(x) >= 2:
+                        try:
+                            popt, _ = curve_fit(self._model_func, x, y, p0=p0, maxfev=10000)
+                            x_fit = np.linspace(x.min(), x.max(), 200)
+                            ax.plot(x_fit, self._model_func(x_fit, *popt), color=col, linestyle=ls)
+                            continue
+                        except RuntimeError:
+                            print(f"WARNING: curve_fit failed to converge "
+                                  f"(opt={target_opt}, mtime={mtime}, ls={ls}); "
+                                  f"falling back to connecting line.")
+
+                    ax.plot(x, y, color=col, linestyle=ls, marker='x')
+
+            handles = [
+                plt.Line2D([0], [0], color='k', linestyle='-', label='SAG13 x Dressing (fit)'),
+                plt.Line2D([0], [0], color='k', linestyle='--', label='Bryson x Dressing (fit)'),
+                plt.Line2D([0], [0], marker='s', color='lightgrey', linestyle='', label='in 5 yrs'),
+                plt.Line2D([0], [0], marker='s', color='gray', linestyle='', label='in 10 yrs'),
+                plt.Line2D([0], [0], marker='s', color='tab:orange', linestyle='', label='in 15 yrs'),
+            ]
+            ax.legend(handles=handles, loc='upper right', title=f'{exp_str}, {char_str}, to {target_pct}')
 
             ax.set_xlabel(r'$\eta_\mathrm{Earth, FGK}$; EEC Ratio')
             ax.set_ylabel(f'Required {self.option_name} ({self.option_unit})')
-            ax.set_title(f'{opt}, in {mtime} years')
-            ax.legend()
+            ax.set_title(f'{exp_str}, {char_str}\nto {target_pct}', fontsize=10)
+            ax.grid(True, which='both', linestyle='-', linewidth=0.5)
+            ax.set_ylim(y_low, y_high)
+
+            fig.tight_layout()
 
             if self.save_path:
-                subfolder = self.save_path / "final_fit"
+                subfolder = self.save_path / "final_fit_plots"
                 subfolder.mkdir(parents=True, exist_ok=True)
-                plt.savefig(subfolder / f"{opt}_mtime_{mtime}.png", bbox_inches="tight", dpi=300)
+                plt.savefig(subfolder / f"{target_opt}.png", bbox_inches="tight", dpi=300)
                 plt.close()
             else:
                 plt.show()
 
-    def plot_final_fit_scaledetas(self, opt):
-        for mtime in [5, 10, 15]:
-            vals = self.get_scaledeta_vals(opt=opt, mtime=float(mtime))
+    def plot_final_fit_one_scaledetas(self, opt):
+        opt2 = opt.replace('f09', 'f05')
 
-            p0 = [1, -1]
-            popt_tot, _ = curve_fit(self._model_func, vals[:, 0], vals[:, 1], p0=p0, maxfev=10000)
+        exp_str = 'Exp. ' + ' and '.join(p[1:] for p in opt.split('_') if p.startswith('e') and p[1:].isdigit())
+        char_str = 'char. opt.' if 'char' in opt.split('_') else 'not char. opt.'
 
-            fig, ax = plt.subplots(dpi=200)
+        colors = {5: 'lightgrey', 10: 'gray', 15: 'tab:orange'}
+        p0 = [1, -1]
 
-            ax.scatter(vals[:, 0], vals[:, 1], marker='x', label='Data', color='k')
+        all_y = []
+        for target_opt in [opt, opt2]:
+            for mtime in colors:
+                vals = self.get_scaledeta_vals(opt=target_opt, mtime=float(mtime))
+                all_y.append(vals[:, 1])
 
-            x = np.linspace(vals[:, 0].min(), vals[:, 0].max(), 200)
-            ax.plot(x, self._model_func(x, *popt_tot), label=f'fit_tot = {round(popt_tot[1], 2)}', color='tab:blue')
+        all_y = np.concatenate(all_y)
+        y_low, y_high = np.percentile(all_y, (5, 95))
+
+        for target_opt, target_pct in [(opt, '90%'), (opt2, '50%')]:
+            fig, ax = plt.subplots(dpi=200, figsize=(5, 4.5))
+
+            for mtime, col in colors.items():
+                vals = self.get_scaledeta_vals(opt=target_opt, mtime=float(mtime))
+                x = np.asarray(vals[:, 0], dtype=float)
+                y = np.asarray(vals[:, 1], dtype=float)
+                ax.scatter(x, y, marker='x', color=col)
+
+                if len(x) >= 2:
+                    try:
+                        popt, _ = curve_fit(self._model_func, x, y, p0=p0, maxfev=10000)
+                        x_fit = np.linspace(x.min(), x.max(), 200)
+                        ax.plot(x_fit, self._model_func(x_fit, *popt), color=col, linestyle='-')
+                        continue
+                    except RuntimeError:
+                        print(f"WARNING: curve_fit failed to converge (opt={target_opt}, mtime={mtime}); falling back to connecting line.")
+
+                ax.plot(x, y, color=col, linestyle='-', marker='x')
+
+            handles = [
+                plt.Line2D([0], [0], marker='s', color='lightgrey', linestyle='', label='in 5 yrs'),
+                plt.Line2D([0], [0], marker='s', color='gray', linestyle='', label='in 10 yrs'),
+                plt.Line2D([0], [0], marker='s', color='tab:orange', linestyle='', label='in 15 yrs'),
+            ]
+            ax.legend(handles=handles, loc='upper right', title=f'{exp_str}, {char_str}, to {target_pct}')
 
             ax.set_xlabel(r'$\eta_\mathrm{Earth, FGK}$; EEC Ratio')
             ax.set_ylabel(f'Required {self.option_name} ({self.option_unit})')
-            ax.set_title(f'{opt}, in {mtime} years')
-            ax.legend()
+            ax.set_title(f'{exp_str}, {char_str}\nto {target_pct}', fontsize=10)
+            ax.grid(True, which='both', linestyle='-', linewidth=0.5)
+            ax.set_ylim(y_low, y_high)
+
+            fig.tight_layout()
 
             if self.save_path:
-                subfolder = self.save_path / "final_fit"
+                subfolder = self.save_path / "final_fit_plots"
                 subfolder.mkdir(parents=True, exist_ok=True)
-                plt.savefig(subfolder / f"{opt}_mtime_{mtime}.png", bbox_inches="tight", dpi=300)
+                plt.savefig(subfolder / f"{target_opt}.png", bbox_inches="tight", dpi=300)
                 plt.close()
             else:
                 plt.show()
@@ -734,9 +801,9 @@ class YieldAnalysis:
         experiments = sorted(p.name for p in experiments_path.iterdir() if p.is_dir() and p.name not in exclude and 'f09' in p.name)
         experiments_clean = [s.removeprefix('opt_') for s in experiments]
 
-        for opt in experiments_clean:
-            print(f"Fitting {opt}...")
+        for experiment in experiments_clean:
+            print(f"Fitting {experiment}...")
             if catalog_mode == 'default':
-                self.plot_final_fit_default(opt=opt)
+                self.plot_final_fit_one_default(opt=experiment)
             elif catalog_mode == 'scaledetas':
-                self.plot_final_fit_scaledetas(opt=opt)
+                self.plot_final_fit_one_scaledetas(opt=experiment)
