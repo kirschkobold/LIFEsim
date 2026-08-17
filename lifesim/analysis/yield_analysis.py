@@ -676,9 +676,16 @@ class YieldAnalysis:
         for target_opt in [opt, opt2]:
             for mtime in colors:
                 val_bryson, val_sag = self.separate_bryson_sag(opt=target_opt, mtime=float(mtime))
-                all_y.append(val_sag[:, 1])
-                all_y.append(val_bryson[:, 1])
+                val_bryson2 = val_bryson[np.isfinite(val_bryson).all(axis=1)]
+                val_sag2 = val_sag[np.isfinite(val_sag).all(axis=1)]
+                if len(val_bryson2) > 0:
+                    all_y.append(val_bryson2[:, 1])
+                if len(val_sag2) > 0:
+                    all_y.append(val_sag2[:, 1])
 
+        if len(all_y) == 0:
+            print(f"WARNING: No finite data available for {opt}; skipping.")
+            return
         all_y = np.concatenate(all_y)
         y_low, y_high = np.percentile(all_y, (5, 95))
 
@@ -687,7 +694,9 @@ class YieldAnalysis:
 
             for mtime, col in colors.items():
                 val_bryson, val_sag = self.separate_bryson_sag(opt=target_opt, mtime=float(mtime))
-                for vals, ls in [(val_sag, '-'), (val_bryson, '--')]:
+                val_bryson2 = val_bryson[np.isfinite(val_bryson).all(axis=1)]
+                val_sag2 = val_sag[np.isfinite(val_sag).all(axis=1)]
+                for vals, ls in [(val_sag2, '-'), (val_bryson2, '--')]:
                     x = np.asarray(vals[:, 0], dtype=float)
                     y = np.asarray(vals[:, 1], dtype=float)
                     ax.scatter(x, y, marker='x', color=col)
@@ -743,8 +752,13 @@ class YieldAnalysis:
         for target_opt in [opt, opt2]:
             for mtime in colors:
                 vals = self.get_scaledeta_vals(opt=target_opt, mtime=float(mtime))
-                all_y.append(vals[:, 1])
+                vals2 = vals[np.isfinite(vals).all(axis=1)]
+                if len(vals2) > 0:
+                    all_y.append(vals2[:, 1])
 
+        if len(all_y) == 0:
+            print(f"WARNING: No finite data available for {opt}; skipping.")
+            return
         all_y = np.concatenate(all_y)
         y_low, y_high = np.percentile(all_y, (5, 95))
 
@@ -753,8 +767,9 @@ class YieldAnalysis:
 
             for mtime, col in colors.items():
                 vals = self.get_scaledeta_vals(opt=target_opt, mtime=float(mtime))
-                x = np.asarray(vals[:, 0], dtype=float)
-                y = np.asarray(vals[:, 1], dtype=float)
+                vals2 = vals[np.isfinite(vals).all(axis=1)]
+                x = np.asarray(vals2[:, 0], dtype=float)
+                y = np.asarray(vals2[:, 1], dtype=float)
                 ax.scatter(x, y, marker='x', color=col)
 
                 if len(x) >= 2:
