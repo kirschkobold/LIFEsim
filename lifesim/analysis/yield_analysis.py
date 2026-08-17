@@ -362,6 +362,25 @@ class YieldAnalysis:
 
         return diam_time_tables
 
+    def _get_original_limits(self, opt_names):
+        base = Path(self.catalog_folder_path)
+        catalog = next(
+            p for p in sorted(base.iterdir())
+            if p.is_dir() and p.name not in {"config_files", "logs"}
+        )
+
+        diameters = []
+
+        for opt_name in opt_names:
+            opt_path = catalog / "output" / f"opt_{opt_name}"
+            subdirs = [d for d in opt_path.iterdir() if d.is_dir()]
+
+            for subdir in subdirs:
+                diameters.append(extract_float_from_name(subdir.name))
+
+        diameters = np.asarray(diameters, dtype=float)
+        return float(diameters.min()), float(diameters.max())
+
     def one_catalog_all_opt_plot(self, 
                                  cat_name):
         source_path = Path(self.catalog_folder_path) / cat_name / 'output'
@@ -672,22 +691,9 @@ class YieldAnalysis:
         colors = {5: 'lightgrey', 10: 'gray', 15: 'tab:orange'}
         p0 = [1, -1]
 
-        all_y = []
-        for target_opt in [opt, opt2]:
-            for mtime in colors:
-                val_bryson, val_sag = self.separate_bryson_sag(opt=target_opt, mtime=float(mtime))
-                val_bryson2 = val_bryson[np.isfinite(val_bryson).all(axis=1)]
-                val_sag2 = val_sag[np.isfinite(val_sag).all(axis=1)]
-                if len(val_bryson2) > 0:
-                    all_y.append(val_bryson2[:, 1])
-                if len(val_sag2) > 0:
-                    all_y.append(val_sag2[:, 1])
-
-        if len(all_y) == 0:
-            print(f"WARNING: No finite data available for {opt}; skipping.")
-            return
-        all_y = np.concatenate(all_y)
-        y_low, y_high = np.percentile(all_y, (5, 95))
+        y_min, y_max = self._get_original_limits([opt, opt2])
+        y_low = 0.5 * y_min
+        y_high = 2.0 * y_max
 
         for target_opt, target_pct in [(opt, '90%'), (opt2, '50%')]:
             fig, ax = plt.subplots(dpi=200, figsize=(5, 4.5))
@@ -748,19 +754,9 @@ class YieldAnalysis:
         colors = {5: 'lightgrey', 10: 'gray', 15: 'tab:orange'}
         p0 = [1, -1]
 
-        all_y = []
-        for target_opt in [opt, opt2]:
-            for mtime in colors:
-                vals = self.get_scaledeta_vals(opt=target_opt, mtime=float(mtime))
-                vals2 = vals[np.isfinite(vals).all(axis=1)]
-                if len(vals2) > 0:
-                    all_y.append(vals2[:, 1])
-
-        if len(all_y) == 0:
-            print(f"WARNING: No finite data available for {opt}; skipping.")
-            return
-        all_y = np.concatenate(all_y)
-        y_low, y_high = np.percentile(all_y, (5, 95))
+        y_min, y_max = self._get_original_limits([opt, opt2])
+        y_low = 0.5 * y_min
+        y_high = 2.0 * y_max
 
         for target_opt, target_pct in [(opt, '90%'), (opt2, '50%')]:
             fig, ax = plt.subplots(dpi=200, figsize=(5, 4.5))
