@@ -475,7 +475,7 @@ class YieldAnalysis:
         return vals[vals[:, 0].argsort()]  # sort by eta
     
     def plot_final_one_default(self,
-                       opt):
+                       opt, log_scale=False):
         fig, ax = plt.subplots(dpi=200, ncols=2, figsize=(8, 4), gridspec_kw={'width_ratios': [4, 3]})
 
         exp_str = 'Exp. ' + ' and '.join(p[1:] for p in opt.split('_') if p.startswith('e') and p[1:].isdigit())
@@ -534,6 +534,10 @@ class YieldAnalysis:
         ax[0].set_ylim(ymin, ymax)
         ax[1].set_ylim(ymin, ymax)
 
+        if log_scale:
+            ax[0].set_yscale('log')
+            ax[1].set_yscale('log')
+
         exp_str = 'Exp. ' + ' and '.join(p[1:] for p in opt.split('_') if p.startswith('e') and p[1:].isdigit())
         char_str = 'char. opt.' if 'char' in opt.split('_') else 'not char. opt.'
         fig.suptitle(f'{exp_str}, {char_str}', fontsize=12, x=0.9, y=0.8, ha='right', va='top')
@@ -544,13 +548,15 @@ class YieldAnalysis:
             subfolder = self.save_path / "final_plots"
             subfolder.mkdir(parents=True, exist_ok=True)
             plot_name = opt + ".png"  # Path(path).parts[-3] + "_" + Path(path).name + ".png"
+            if log_scale:
+                plot_name = opt + "_log.png"
             plt.savefig(subfolder / plot_name, bbox_inches="tight", dpi=300)
             plt.close()
         else:
             plt.show()
 
     def plot_final_one_scaledetas(self,
-                                  opt):
+                                  opt, log_scale=False):
         fig, ax = plt.subplots(dpi=200, ncols=2, figsize=(8, 4), gridspec_kw={'width_ratios': [4, 3]})
 
         exp_str = 'Exp. ' + ' and '.join(p[1:] for p in opt.split('_') if p.startswith('e') and p[1:].isdigit())
@@ -594,18 +600,24 @@ class YieldAnalysis:
         ax[0].set_ylim(ymin, ymax)
         ax[1].set_ylim(ymin, ymax)
 
+        if log_scale:
+            ax[0].set_yscale('log')
+            ax[1].set_yscale('log')
+
         fig.tight_layout()
 
         if self.save_path:
             subfolder = self.save_path / "final_plots"
             subfolder.mkdir(parents=True, exist_ok=True)
             plot_name = opt + ".png"
+            if log_scale:
+                plot_name = opt + "_log.png"
             plt.savefig(subfolder / plot_name, bbox_inches="tight", dpi=300)
             plt.close()
         else:
             plt.show()
 
-    def plot_all_final(self, catalog_mode='default'):
+    def plot_all_final(self, catalog_mode='default', log_scale=False):
         base = Path(self.catalog_folder_path)
         exclude = {"config_files", "logs"}
         catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
@@ -618,9 +630,9 @@ class YieldAnalysis:
         for experiment in experiments_clean:
             print(f"Processing {experiment}...")
             if catalog_mode == 'default':
-                self.plot_final_one_default(opt=experiment)
+                self.plot_final_one_default(opt=experiment, log_scale=log_scale)
             elif catalog_mode == 'scaledetas':
-                self.plot_final_one_scaledetas(opt=experiment)
+                self.plot_final_one_scaledetas(opt=experiment, log_scale=log_scale)
 
     def final_plots_data(self, catalog_mode='default'):
         base = Path(self.catalog_folder_path)
