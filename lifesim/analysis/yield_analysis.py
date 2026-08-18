@@ -32,7 +32,9 @@ class YieldAnalysis:
     def interpolate_one(self, 
                         source_path,
                         kind_option=None):
+        print("---")
         print(f"Processing {source_path}")
+
         subdirs = [d for d in os.listdir(source_path) if os.path.isdir(os.path.join(source_path, d))]
         diams_float = [extract_float_from_name(d) for d in subdirs]
         diams = [str(value).replace('.', '_') for value in diams_float]
@@ -103,6 +105,7 @@ class YieldAnalysis:
         else:
             overlap_fraction = (overlap_max - overlap_min) / overlap_range
             print(f"INFO: Overlap fraction of input data with interpolation range is {overlap_fraction:.0%}, rest is extrapolation.")
+            print(f"Input data lies in [{data_min:.2f}, {data_max:.2f}] years.")
 
         max_time_table = pd.DataFrame(index=np.sort(max_times), columns=['diameter_mean', 'lu_diameter', 'uu_diameter', 'diameter_opt_factor'])
 
@@ -151,6 +154,8 @@ class YieldAnalysis:
 
     def run_interpolation(self, kind_option=None):
         # run the interpolation on all opt_ directories in the given path
+        print("---")
+        print("Running interpolation...")
 
         # find all subdirectories (and subsub, and so on) in path that start with 'opt_'
         opt_dirs = []
@@ -161,6 +166,8 @@ class YieldAnalysis:
 
         for opt_dir in opt_dirs:
             self.interpolate_one(opt_dir, kind_option=kind_option)
+
+        print("Interpolation completed.")
 
     def get_eff_eta(self, 
                     catalog_path):
@@ -247,6 +254,9 @@ class YieldAnalysis:
         etas.to_csv(csv_path)
 
     def run_eta_summary(self):
+        print("---")
+        print("Running eta summary...")
+
         base = Path(self.catalog_folder_path)
         exclude = {"config_files", "logs"}
         catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
@@ -259,6 +269,8 @@ class YieldAnalysis:
                           csv_path=csv_path,
                           catalog_base_path=self.catalog_folder_path,
                           catalog_name=catalog_path)
+        
+        print("Eta summary completed.")
     
     def plot_single_opt(self, 
                         path,
@@ -331,6 +343,9 @@ class YieldAnalysis:
             plt.show()
 
     def plot_all_single_opts(self):
+        print("---")
+        print("Running single option plots...")
+
         base = Path(self.catalog_folder_path)
         exclude = {"config_files", "logs"}
         catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
@@ -345,6 +360,8 @@ class YieldAnalysis:
                 experiment_path = Path(self.catalog_folder_path) / catalog / "output" / experiment
                 print(f"Processing {experiment}...")
                 self.plot_single_opt(path=str(experiment_path))
+
+        print("Single option plots completed.")
 
     def _get_catalog(self,
                      source_path):
@@ -430,6 +447,9 @@ class YieldAnalysis:
             plt.show()
 
     def plot_all_one_cat(self):
+        print("---")
+        print("Running one catalog all option plots...")
+
         base = Path(self.catalog_folder_path)
         exclude = {"config_files", "logs"}
         catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
@@ -437,6 +457,8 @@ class YieldAnalysis:
         for catalog in catalogs: 
             print(f"Processing catalog {catalog}...")
             self.one_catalog_all_opt_plot(cat_name=catalog)
+
+        print("One catalog all option plots completed.")
 
     def separate_bryson_sag(self,
                             opt,
@@ -636,6 +658,9 @@ class YieldAnalysis:
             plt.show()
 
     def plot_all_final(self, catalog_mode='default', log_scale=False, limit_scale=False):
+        print("---")
+        print(f"Running final plots...")
+
         base = Path(self.catalog_folder_path)
         exclude = {"config_files", "logs"}
         catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
@@ -652,7 +677,12 @@ class YieldAnalysis:
             elif catalog_mode == 'scaledetas':
                 self.plot_final_one_scaledetas(opt=experiment, log_scale=log_scale, limit_scale=limit_scale)
 
+        print("Final plots completed.")
+
     def final_plots_data(self, catalog_mode='default'):
+        print("---")
+        print("Saving data for final plots...")
+
         base = Path(self.catalog_folder_path)
         exclude = {"config_files", "logs"}
         catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
@@ -708,6 +738,8 @@ class YieldAnalysis:
             df = pd.DataFrame(records)
             csv_name = opt + "_data.csv"
             df.to_csv(subfolder / csv_name, index=False)
+
+        print("Data saved for final plots.")
 
     def _model_func(self, x, a, b):
         return a * x**b 
@@ -833,6 +865,9 @@ class YieldAnalysis:
                 plt.show()
 
     def plot_final_fit(self, catalog_mode='default'):
+        print("---")
+        print("Running final fit plots...")
+
         base = Path(self.catalog_folder_path)
         exclude = {"config_files", "logs"}
         catalogs = sorted(p.name for p in base.iterdir() if p.is_dir() and p.name not in exclude)
@@ -848,3 +883,5 @@ class YieldAnalysis:
                 self.plot_final_fit_one_default(opt=experiment)
             elif catalog_mode == 'scaledetas':
                 self.plot_final_fit_one_scaledetas(opt=experiment)
+
+        print("Final fit plots completed.")
