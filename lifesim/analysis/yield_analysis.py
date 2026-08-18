@@ -509,7 +509,7 @@ class YieldAnalysis:
         ]
         ax[0].legend(handles=handles, loc='upper right', title=f'{exp_str}, {char_str}, in 5 years')
 
-        for i, col in zip([5, 10, 15], ['lightgrey', 'gray', 'tab:orange']):
+        for i, col in zip([5, 10, 15], ['tab:orange', 'gray', 'lightgrey']):
             val_bryson, val_sag = self.separate_bryson_sag(opt=opt, mtime=float(i))
             ax[1].plot(val_sag[:, 0], val_sag[:, 1], marker='x', linestyle='-', label='SxD', color=col)
             ax[1].plot(val_bryson[:, 0], val_bryson[:, 1], marker='x', linestyle='--', label='BxD', color=col)
@@ -585,7 +585,7 @@ class YieldAnalysis:
         ]
         ax[0].legend(handles=handles, loc='upper right', title=f'{exp_str}, {char_str}, in 5 years')
 
-        for i, col in zip([5, 10, 15], ['lightgrey', 'gray', 'tab:orange']):
+        for i, col in zip([5, 10, 15], ['tab:orange', 'gray', 'lightgrey']):
             vals = self.get_scaledeta_vals(opt=opt, mtime=float(i))
             ax[1].plot(vals[:, 0], vals[:, 1], marker='x', linestyle='-', color=col)
         
@@ -753,9 +753,9 @@ class YieldAnalysis:
             handles = [
                 plt.Line2D([0], [0], color='k', linestyle='-', label='SAG13 x Dressing (fit)'),
                 plt.Line2D([0], [0], color='k', linestyle='--', label='Bryson x Dressing (fit)'),
-                plt.Line2D([0], [0], marker='s', color='lightgrey', linestyle='', label='in 5 yrs'),
-                plt.Line2D([0], [0], marker='s', color='gray', linestyle='', label='in 10 yrs'),
-                plt.Line2D([0], [0], marker='s', color='tab:orange', linestyle='', label='in 15 yrs'),
+                plt.Line2D([0], [0], marker='x', color='tab:orange', linestyle='', label='in 5 yrs'),
+                plt.Line2D([0], [0], marker='x', color='gray', linestyle='', label='in 10 yrs'),
+                plt.Line2D([0], [0], marker='x', color='lightgrey', linestyle='', label='in 15 yrs'),
             ]
             ax.legend(handles=handles, loc='upper right', title=f'{exp_str}, {char_str}, to {target_pct}')
 
@@ -810,9 +810,9 @@ class YieldAnalysis:
                 ax.plot(x, y, color=col, linestyle='-', marker='x')
 
             handles = [
-                plt.Line2D([0], [0], marker='s', color='lightgrey', linestyle='', label='in 5 yrs'),
-                plt.Line2D([0], [0], marker='s', color='gray', linestyle='', label='in 10 yrs'),
-                plt.Line2D([0], [0], marker='s', color='tab:orange', linestyle='', label='in 15 yrs'),
+                plt.Line2D([0], [0], marker='x', color='tab:orange', linestyle='', label='in 5 yrs'),
+                plt.Line2D([0], [0], marker='x', color='gray', linestyle='', label='in 10 yrs'),
+                plt.Line2D([0], [0], marker='x', color='lightgrey', linestyle='', label='in 15 yrs'),
             ]
             ax.legend(handles=handles, loc='upper right', title=f'{exp_str}, {char_str}, to {target_pct}')
 
