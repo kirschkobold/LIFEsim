@@ -43,7 +43,7 @@ class Options(object):
             - ``'ota_temperature'`` : Temperature of the optical telescope assembly (OTA) in [K].
             - ``'ota_emissivity'`` : Emissivity of the OTA (dimensionless).
             - ``'ota_throughput'`` : Throughput of the OTA (dimensionless).
-            - ``'instrument_temperature'`` : Temperature of the instrument up until the fiber (beam combiner) in [K].
+            - ``'instrument_temperature'`` : Temperature of the instrument up until the fiber in [K].
             - ``'instrument_emissivity'`` : Emissivity of the instrument (dimensionless).
             - ``'instrument_throughput'`` : Throughput of the instrument (dimensionless).
             - ``'detector_temperature'`` : Temperature of the detector in [K].

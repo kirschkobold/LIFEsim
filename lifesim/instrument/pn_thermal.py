@@ -7,7 +7,7 @@ from lifesim.util.radiation import black_body
 
 class PhotonNoiseThermal(PhotonNoiseInstrumentModule):
     """
-    This class simulates the thermal noise contribution of the mirror and detector to the interferometric
+    This class simulates the thermal noise contribution of the mirror, instrument and detector to the interferometric
     measurement of LIFE.
     """
 
@@ -24,7 +24,7 @@ class PhotonNoiseThermal(PhotonNoiseInstrumentModule):
     def noise(self,
               index: Union[int, type(None)]):
         """
-        Simulates the amount of photon noise originating from the thermal emission of the mirror and detector
+        Simulates the amount of photon noise originating from the thermal emission of the mirror, instrument and detector
         leaking into the LIFE array measurement.
 
         Parameters
@@ -36,44 +36,44 @@ class PhotonNoiseThermal(PhotonNoiseInstrumentModule):
 
         Returns
         -------
-        tm_leak
-            Thermal leakage of the mirror in [photon s-1] per wavelength bin.
-        td_leak
+        thermal_leak_ota
+            Thermal leakage of the primary mirror in [photon s-1] per wavelength bin.
+        thermal_leak_instrument
+            Thermal leakage of the instrument up until the fiber in [photon s-1] per wavelength bin.
+        thermal_leak_detector
             Thermal leakage of the detector in [photon s-1] per wavelength bin.
-        ti_leak
-            Thermal leakage of the instrument up until the fiber (beam combiner) in [photon s-1] per wavelength bin.
 
         Notes
         -----
-        All of the following parameters are needed for the calculation of the thermal mirror and detector noise
+        All of the following parameters are needed for the calculation of the thermal mirror, instrument and detector noise
         contribution and should be specified either in 'data.inst' or 'data.options'.
 
-        data.inst['hfov'] : np.ndarray
-            Contains the half field of view of the observatory in [rad] for each of the spectral bins.
         data.inst['wl_bins'] : np.ndarray
             Central values of the spectral bins in the wavelength regime in [m].
         data.inst['wl_bin_widths'] : np.ndarray
-            Widths of the spectral wavelength bins in [m].
-        data.options.array['primary_temp'] : float
-            Temperature of the mirror in [K].
-        data.options.array['primary_emissivity'] : float
-            Emissivity of the mirror (dimensionless).
-        data.inst['telescope_area'] : float
-            Area of all array apertures combined in [m^2].
-        data.options.array['num_apertures'] : int
-            Number of apertures in the array.
-        data.options.array['instrument_temp'] : float
-            Temperature of the instrument up until the fiber (beam combiner) in [K].
+            Widths of the spectral bins in the wavelength regime in [m].
+        data.options.array['throughput'] : float
+            Optical throughput of the whole instrument in [%].
         data.options.array['pixel_size'] : float
             Size of the pixels in [m]. (length of one side of the square pixel)
         data.options.array['pix_per_wl'] : int
-            Number of pixels per wavelength bin (Nyquist rate).
-        data.options.array['detector_wl_min'] : float
+            Nyquist rate / Number of pixels per wavelength, i.e. how many pixels are used to sample one wavelength in the detector.
+        data.options.thermal['ota_emissivity'] : float
+            Emissivity of the OTA (dimensionless).
+        data.options.thermal['ota_throughput'] : float
+            Throughput of the OTA (dimensionless).
+        data.options.thermal['ota_temperature'] : float
+            Temperature of the optical telescope assembly (OTA) in [K].
+        data.options.thermal['instrument_emissivity'] : float
+            Emissivity of the instrument (dimensionless).
+        data.options.thermal['instrument_temperature'] : float
+            Temperature of the instrument up until the fiber in [K].
+        data.options.thermal['detector_wl_min'] : float
             Minimum wavelength of the detector sensitivity range in [m].
-        data.options.array['detector_wl_max'] : float
+        data.options.thermal['detector_wl_max'] : float
             Maximum wavelength of the detector sensitivity range in [m].
-        data.options.array['d_temp'] : float
-            Temperature of the detector environment in [K].
+        data.options.thermal['detector_temperature'] : float
+            Temperature of the detector in [K].
         """
 
         # etendue for single mode

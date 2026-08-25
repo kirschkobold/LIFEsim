@@ -43,6 +43,12 @@ class ElectronNoiseDarkCurrent(ElectronNoiseDetectorModule):
         All of the following parameters are needed for the calculation of the dark current noise
         contribution and should be specified either in `data.catalog` or `data.single` or 'data.inst' or 'data.options'.
 
+        data.options.array['wl_min'] : float
+            Minimum wavelength of the spectrometer in [microns].
+        data.options.array['wl_max'] : float
+            Maximum wavelength of the spectrometer in [microns].
+        data.options.array['spec_res_inst'] : float
+            Spectral resolution used for the detector, for simulations with lower spec_res (dimensionless).
         data.inst['wl_bins'] : np.ndarray
             Central values of the spectral bins in the wavelength regime in [m].
         data.options.array['dc_per_pix'] : float
