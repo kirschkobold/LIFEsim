@@ -32,17 +32,23 @@ class Options(object):
             - ``'t_efficiency'`` : Time efficiency of the observation accounting for overheads.
               E.g. if the time efficiency is 0.8, 80% of the on-target observation time will be
               actually spend integrating photons.
-            - ``'primary_temp'`` : Temperature of the mirror in [K].
-            - ``'primary_emissivity'`` : Emissivity of the mirror (dimensionless).
-            - ``'d_temp'`` : Temperature of the detector environment in [K].
             - ``'pixel_size'`` : Size of the pixels in [m]. (length of one side of the square pixel)
             - ``'dc_per_pix'`` : Dark current per pixel in [e-/px/s].
-            - ``'detector_wl_min'`` : Minimum wavelength of the detector sensitivity in [m].
-            - ``'detector_wl_max'`` : Maximum wavelength of the detector sensitivity in [m].
             - ``'pix_per_wl'`` : Nyquist rate / Number of pixels per wavelength, i.e. how many pixels are used to sample one wavelength in the detector.
             - ``'num_apertures'`` : Number of apertures (collecetor spacecraft).
             - ``'num_outputs'`` : Number of outputs.
             - ``'fixed_baseline'`` : If true, the baseline will be fixed to the value given in ``'baseline'``. If false, the baseline will be optimized.
+    thermal : dict
+        Options concerning the thermal noise of the LIFE array. They are
+            - ``'ota_temperature'`` : Temperature of the optical telescope assembly (OTA) in [K].
+            - ``'ota_emissivity'`` : Emissivity of the OTA (dimensionless).
+            - ``'ota_throughput'`` : Throughput of the OTA (dimensionless).
+            - ``'instrument_temperature'`` : Temperature of the instrument up until the fiber (beam combiner) in [K].
+            - ``'instrument_emissivity'`` : Emissivity of the instrument (dimensionless).
+            - ``'instrument_throughput'`` : Throughput of the instrument (dimensionless).
+            - ``'detector_temperature'`` : Temperature of the detector in [K].
+            - ``'detector_wl_min'`` : Minimum wavelength of the detector sensitivity range in [m].
+            - ``'detector_wl_max'`` : Maximum wavelength of the detector sensitivity range in [m].
     other : dict
         Options concerning simulation parameters. They are
             - ``'image_size'`` : Number of pixels (in one axis) which will be simulated.
@@ -69,14 +75,14 @@ class Options(object):
             - ``'characterization'`` : If true, the optimization will be performed for characterization as well.
             - ``'snr_char'`` : SNR threshold for characterization.
             - ``'opt_limit'`` : possible options are 'time' and 'experiments'
-            - ``'opt_limit_factor'`` : 
-            - ``'n_orbits'`` : 
-            - ``'iwa_cut'`` :
+            - ``'opt_limit_factor'`` : Fraction [0, 1] of simulated universes in which an experiment must reach its sample_size before that experiment is considered complete.
+            - ``'n_orbits'`` : number of orbital visits used for follow-up observations
+            - ``'iwa_cut'`` : optional inner working angle threshold for the transmission in [arcsec]. Disable with 'None' (default).
+            old:
             - ``'limit'`` : Limits the number of wanted detections for the different stellar host
               star types.
             - ``'habitable'`` : If true, the integration time is optimized towards planets residing
               in the habitable zone.
-            - ``'t_search'`` : Duration of the search phase in [s].
     """
     def __init__(self):
         """

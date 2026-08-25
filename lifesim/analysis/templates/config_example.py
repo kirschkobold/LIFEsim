@@ -3,17 +3,17 @@ yields_path = "/cluster/project/quanz/YOUR_USERNAME/yields"           # path to 
 venv_path = "/cluster/home/YOUR_USERNAME/LIFEsim/venv/bin/activate"   # path to the activate script of your virtual environment
 
 # per run configurations
-today = "20260429"                 # format: YYYYMMDD
-catalog_source_date = "20260421"   # format: YYYYMMDD, date of the imported catalogs
-catalog_mode = "default"                  # either "default" or "scaledetas"
-queue = "public"                   # alternatively es_quanz
+today = "primarytemp"                 # format: no underscores
+catalog_source_date = "20260629"      # name of folder with the imported catalogs
+catalog_mode = "scaledetas"           # either "default" (old) or "scaledetas"
+queue = "public"                      # alternatively es_quanz
 
 # sweep options
-option_name =   "primary_temp"        # name of the option to sweep over
-option_values = "np.arange(44,50)"    # values to sweep over
-run_name =      "primarymirror_sweep" # name of the run, used for naming folders and files
-option_fullname = "Primary Mirror Temperature" # full name of the option, used for plot labels
-option_unit =   "K"                   # unit of the option, used for plot labels
+option_name = "primary_temp"                    # name of the option to sweep over (identical to lifesim/util/options)
+option_values = "np.arange(45,55)"              # values to sweep over, format: string
+run_name = "primarymirror_sweep"                # name of the run, used for naming folders and files
+option_fullname = "Primary Mirror Temperature"  # full name of the option, used for plot labels
+option_unit = "K"                               # unit of the option, used for plot labels
 
 # analysis options
 kind_option = None # interpolation method to use, e.g. 'linear', 'quadratic', 'cubic' (if None, will be chosen based on number of data points)
